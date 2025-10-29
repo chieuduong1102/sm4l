@@ -7,18 +7,24 @@ import {
     Dimensions,
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { 
-    faHistory, 
-    faChartBar, 
-    faHome, 
-    faWallet, 
-    faBars 
-} from '@fortawesome/free-solid-svg-icons';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
+
+// Add FontAwesome icons to library
+library.add(fas);
 
 const { width } = Dimensions.get('window');
 
 interface MenuMainProps {
     activeTab?: string;
+}
+
+interface MenuItem {
+    key: string;
+    icon: IconProp;
+    label: string;
+    onPress: () => void;
 }
 
 const MenuMain: React.FC<MenuMainProps> = ({ activeTab = 'home' }) => {
@@ -43,34 +49,34 @@ const MenuMain: React.FC<MenuMainProps> = ({ activeTab = 'home' }) => {
         console.log('Navigate to Menu Screen');
     };
 
-    const menuItems = [
+    const menuItems: MenuItem[] = [
         {
             key: 'history',
-            icon: faHistory as any,
+            icon: ['fas', 'history'],
             label: 'Lịch sử',
             onPress: navigateToHistory,
         },
         {
             key: 'statistics',
-            icon: faChartBar as any,
+            icon: ['fas', 'chart-bar'],
             label: 'Thống kê',
             onPress: navigateToStatistics,
         },
         {
             key: 'home',
-            icon: faHome as any,
+            icon: ['fas', 'home'],
             label: 'Trang chủ',
             onPress: navigateToHome,
         },
         {
             key: 'wallet',
-            icon: faWallet as any,
+            icon: ['fas', 'wallet'],
             label: 'Ví',
             onPress: navigateToWallet,
         },
         {
             key: 'menu',
-            icon: faBars as any,
+            icon: ['fas', 'bars'],
             label: 'Menu',
             onPress: navigateToMenu,
         },
