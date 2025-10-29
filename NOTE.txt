@@ -1,0 +1,36 @@
+
+#______________________BULD + RUN APP____________________________________
+#Setting ANDROID_HOME
+    export ANDROID_HOME=/Users/satehanoi/Library/Android/sdk
+    export PATH=$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH
+    source ~/.zshrc
+
+
+#Setting Java 17
+    export JAVA_HOME=$(/usr/libexec/java_home -v 17)        
+    echo $JAVA_HOME
+
+#Local properties Android
+    Create file local.properties in /android/
+    sdk.dir=/Users/satehanoi/Library/Android/sdk
+    
+#Build ios
+    cd ios
+    rm -rf Pods Podfile.lock
+    pod install
+    cd ..
+
+#Android
+    cd android
+    ./gradlew clean
+    cd ..
+
+#iOS  
+    cd ios
+    xcodebuild clean
+    cd ..
+
+#npm
+    npm i
+    npm run android
+    npm run ios
