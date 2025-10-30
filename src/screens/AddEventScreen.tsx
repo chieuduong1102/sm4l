@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,6 +8,8 @@ import {
     ScrollView,
     FlatList,
     Alert,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -16,6 +18,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { RootStackParamList, Routes } from '../navigations/Routes';
 import HeaderMain from '../components/HeaderMain';
 import HistoryItem from '../components/HistoryItem';
+import { getDataEventsDayFromStore, saveDataEventDayToStore } from '../services/EventStorageService';
 
 type AddEventScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddEventScreen'>;
 type AddEventScreenRouteProp = RouteProp<RootStackParamList, 'AddEventScreen'>;
@@ -35,15 +38,18 @@ const AddEventScreen: React.FC = () => {
 
     const [selectedTag, setSelectedTag] = useState<ExpenseTag | null>(null);
     const [amountInput, setAmountInput] = useState('');
-    const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showEventInput, setShowEventInput] = useState(false);
     const [eventInput, setEventInput] = useState('');
     const [showDetailInput, setShowDetailInput] = useState(false);
-    const [history, setHistory] = useState([
-        { id: '1', eventName: 'Ăn uống', tag: 'Ăn uống', detail: 'Bữa tối với gia đình', amount: '100,000đ' },
-        { id: '2', eventName: 'Xăng xe', tag: 'Xăng xe', detail: 'Đổ xăng xe máy', amount: '50,000đ' },
-        { id: '3', eventName: 'Mua sắm', tag: 'Mua sắm', detail: 'Mua quần áo mới', amount: '200,000đ' },
-    ]);
+    const [history, setHistory] = useState<{ date: string; events: { id: string, tag: string; amount: number; formattedAmount: string; detail: string; dateTimePay: string; }[] }[]>([]);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            const events = await getDataEventsDayFromStore(selectedDate);
+            setHistory(events);
+        };
+        fetchHistory();
+    }, [selectedDate]);
 
     const isSaveButtonEnabled = selectedTag && amountInput;
 
@@ -105,15 +111,7 @@ const AddEventScreen: React.FC = () => {
     const handleAmountChange = (text: string) => {
         const numericText = text.replace(/[^\d]/g, '');
         setAmountInput(numericText);
-        setSuggestions(generateSuggestions(numericText));
     };
-
-    const handleSuggestionPress = (suggestion: string) => {
-        const numericValue = suggestion.replace(/[^\d]/g, '');
-        setAmountInput(numericValue);
-        setSuggestions([]);
-    };
-
     const handleTagPress = (tag: ExpenseTag) => {
         if (tag.id === '8') {
             setShowEventInput(true);
@@ -132,7 +130,7 @@ const AddEventScreen: React.FC = () => {
         setSelectedTag({ id: '8', name: text, icon: 'plus', color: '#6b7280' });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!selectedTag) {
             Alert.alert('Lỗi', 'Vui lòng chọn loại chi tiêu');
             return;
@@ -143,24 +141,34 @@ const AddEventScreen: React.FC = () => {
             return;
         }
 
-        // Console log để test
-        console.log('Save expense:', {
-            date: selectedDate,
+        const newEvent = {
+            id: Date.now().toString(), // Generate a unique ID
             tag: selectedTag.name,
             amount: parseInt(amountInput),
             formattedAmount: formatCurrency(amountInput),
-        });
+            detail: eventInput,
+        };
 
-        Alert.alert(
-            'Thành công',
-            `Đã lưu chi tiêu ${selectedTag.name}: ${formatCurrency(amountInput)} cho ngày ${formatDate(selectedDate)}`,
-            [
-                {
-                    text: 'OK',
-                    onPress: () => navigation.goBack(),
-                }
-            ]
-        );
+        try {
+            await saveDataEventDayToStore(selectedDate, newEvent);
+            const updatedHistory = await getDataEventsDayFromStore(selectedDate);
+            setHistory(updatedHistory);
+            Alert.alert(
+                'Thành công',
+                `Đã lưu chi tiêu ${selectedTag.name}: ${formatCurrency(amountInput)} cho ngày ${formatDate(selectedDate)}`,
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            navigation.goBack();
+                        },
+                    },
+                ]
+            );
+        } catch (error) {
+            console.error('Error saving event:', error);
+            Alert.alert('Lỗi', 'Không thể lưu chi tiêu. Vui lòng thử lại.');
+        }
     };
 
     const renderTag = ({ item }: { item: ExpenseTag }) => (
@@ -185,124 +193,134 @@ const AddEventScreen: React.FC = () => {
     );
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top + 60 }]}>
-            <HeaderMain
-                title="Thêm chi tiêu"
-                onBackPress={() => navigation.goBack()}
-            />
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            <View style={[styles.container, { paddingTop: insets.top + 60 }]}>
+                <HeaderMain
+                    title="Thêm chi tiêu"
+                    onBackPress={() => navigation.goBack()}
+                />
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                <View style={styles.dateSection}>
-                    <Text style={styles.dateLabel}>Ngày chi tiêu:</Text>
-                    <Text style={styles.dateValue}>{formatDate(selectedDate)}</Text>
-                </View>
+                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    <View style={styles.dateSection}>
+                        <Text style={styles.dateLabel}>Ngày chi tiêu:</Text>
+                        <Text style={styles.dateValue}>{formatDate(selectedDate)}</Text>
+                    </View>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Chọn loại chi tiêu</Text>
-                    <FlatList
-                        data={expenseTags}
-                        renderItem={renderTag}
-                        keyExtractor={(item) => item.id}
-                        numColumns={2}
-                        scrollEnabled={false}
-                        contentContainerStyle={styles.tagsContainer}
-                    />
-                </View>
-                {isSaveButtonEnabled && (
-                <TouchableOpacity
-                    style={styles.resetButton}
-                    onPress={() => {
-                        setSelectedTag(null);
-                        setAmountInput('');
-                        setEventInput('');
-                        setShowEventInput(false);
-                        setShowDetailInput(false);
-                        setSuggestions([]);
-                    }}
-                >
-                    <FontAwesomeIcon icon={['fas', 'redo']} size={16} color="#ef4444" />
-                    <Text style={styles.resetButtonText}>Reset</Text>
-                </TouchableOpacity>
-                )}
-                {showEventInput && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Nhập sự kiện</Text>
-                        <TextInput
-                            style={styles.otherEventInput}
-                            value={eventInput}
-                            onChangeText={handleEventInputChange}
-                            placeholder="Nhập sự kiện"
+                        <Text style={styles.sectionTitle}>Chọn loại chi tiêu</Text>
+                        <FlatList
+                            data={expenseTags}
+                            renderItem={renderTag}
+                            keyExtractor={(item) => item.id}
+                            numColumns={2}
+                            scrollEnabled={false}
+                            contentContainerStyle={styles.tagsContainer}
                         />
                     </View>
-                )}
-
-                {showDetailInput && (
-                    <View style={styles.section}>
-                        <TextInput
-                            style={styles.otherEventInput}
-                            value={eventInput}
-                            onChangeText={setEventInput}
-                            placeholder="Mô tả chi tiết (tùy chọn)"
-                        />
-                    </View>
-                )}
-
-                {(selectedTag || showEventInput) && (
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Nhập số tiền</Text>
-                        <View style={styles.inputContainer}>
+                    {isSaveButtonEnabled && (
+                        <TouchableOpacity
+                            style={styles.resetButton}
+                            onPress={() => {
+                                setSelectedTag(null);
+                                setAmountInput('');
+                                setEventInput('');
+                                setShowEventInput(false);
+                                setShowDetailInput(false);
+                            }}
+                        >
+                            <FontAwesomeIcon icon={['fas', 'redo']} size={16} color="#ef4444" />
+                            <Text style={styles.resetButtonText}>Reset</Text>
+                        </TouchableOpacity>
+                    )}
+                    {showEventInput && (
+                        <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>Nhập sự kiện</Text>
                             <TextInput
-                                style={styles.amountInput}
-                                value={amountInput}
-                                onChangeText={handleAmountChange}
-                                placeholder="Nhập số tiền"
-                                keyboardType="numeric"
-                                returnKeyType="done"
+                                style={styles.otherEventInput}
+                                value={eventInput}
+                                onChangeText={handleEventInputChange}
+                                placeholder="Nhập sự kiện"
                             />
-                            <Text style={styles.currencyLabel}>VNĐ</Text>
                         </View>
+                    )}
 
-                        {amountInput && (
-                            <Text style={styles.formattedAmount}>
-                                {formatCurrency(amountInput)}
-                            </Text>
+                    {showDetailInput && (
+                        <View style={styles.section}>
+                            <TextInput
+                                style={styles.otherEventInput}
+                                value={eventInput}
+                                onChangeText={setEventInput}
+                                placeholder="Mô tả chi tiết (tùy chọn)"
+                            />
+                        </View>
+                    )}
+
+                    {(selectedTag || showEventInput) && (
+                        <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>Nhập số tiền</Text>
+                            <View style={styles.inputContainer}>
+                                <TextInput
+                                    style={styles.amountInput}
+                                    value={amountInput}
+                                    onChangeText={handleAmountChange}
+                                    placeholder="Nhập số tiền"
+                                    keyboardType="numeric"
+                                    returnKeyType="done"
+                                />
+                                <Text style={styles.currencyLabel}>VNĐ</Text>
+                            </View>
+
+                            {amountInput && (
+                                <Text style={styles.formattedAmount}>
+                                    {formatCurrency(amountInput)}
+                                </Text>
+                            )}
+                        </View>
+                    )}
+
+                    {isSaveButtonEnabled && (
+                        <View style={styles.bottomSection}>
+                            <TouchableOpacity
+                                style={[styles.saveButton, !isSaveButtonEnabled && styles.saveButtonDisabled]}
+                                onPress={handleSave}
+                                activeOpacity={0.8}
+                                disabled={!isSaveButtonEnabled}
+                            >
+                                <FontAwesomeIcon
+                                    icon={['fas', 'save']}
+                                    size={20}
+                                    color="#ffffff"
+                                />
+                                <Text style={styles.saveButtonText}>Lưu chi tiêu</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    <View style={[styles.section, { marginBottom: insets.bottom + 80 }]}>
+                        <Text style={styles.sectionTitle}>Lịch sử chi tiêu hôm nay</Text>
+                        {history.length === 0 ? (
+                            <Text style={styles.noEventToday}>Chưa có chi tiêu nào cho ngày này.</Text>
+                        ) : (
+                            history.map((item, index) => (
+                                Array.isArray(item.events) && item.events.map((event) => (
+                                    <HistoryItem
+                                        key={`${item.date}-${event.id}-${index}`}
+                                        eventName={event.tag}
+                                        tag={event.tag}
+                                        detail={event.detail}
+                                        amount={event.formattedAmount}
+                                        dateTimePay={event.dateTimePay || ''}
+                                    />
+                                ))
+                            ))
                         )}
                     </View>
-                )}
-
-                {isSaveButtonEnabled && (
-                    <View style={styles.bottomSection}>
-                        <TouchableOpacity
-                            style={[styles.saveButton, !isSaveButtonEnabled && styles.saveButtonDisabled]}
-                            onPress={handleSave}
-                            activeOpacity={0.8}
-                            disabled={!isSaveButtonEnabled}
-                        >
-                            <FontAwesomeIcon
-                                icon={['fas', 'save']}
-                                size={20}
-                                color="#ffffff"
-                            />
-                            <Text style={styles.saveButtonText}>Lưu chi tiêu</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
-                <View style={[styles.section, { marginBottom: insets.bottom + 80 }]}>
-                    <Text style={styles.sectionTitle}>Lịch sử chi tiêu hôm nay</Text>
-                    {history.map((item) => (
-                        <HistoryItem
-                            key={item.id}
-                            eventName={item.eventName}
-                            tag={item.tag}
-                            detail={item.detail}
-                            amount={item.amount}
-                        />
-                    ))}
-                </View>
-                
-            </ScrollView>
-        </View>
+                </ScrollView>
+            </View>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -465,6 +483,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#ef4444',
         marginLeft: 6,
+    },
+    noEventToday: {
+        fontSize: 14,
+        color: '#64748b',
+        fontStyle: 'italic',
+        textAlign: 'center',
     },
 });
 

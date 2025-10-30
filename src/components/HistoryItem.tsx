@@ -6,15 +6,16 @@ interface HistoryItemProps {
     tag: string;
     detail?: string;
     amount: string;
+    dateTimePay: string;
 }
 
-const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amount }) => {
+const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amount, dateTimePay }) => {
     return (
         <View style={styles.container}>
             <View style={styles.textContainer}>
                 <Text style={styles.eventName}>{eventName}</Text>
-                <Text style={styles.tag}>{tag}</Text>
                 {detail && <Text style={styles.detail}>{detail}</Text>}
+                <Text style={styles.dateTime}>{dateTimePay}</Text>
             </View>
             <Text style={styles.amount}>- {amount}</Text>
         </View>
@@ -52,14 +53,19 @@ const styles = StyleSheet.create({
         color: '#64748b',
     },
     detail: {
-        fontSize: 12,
-        color: '#94a3b8',
+        fontSize: 16,
+        color: '#64748b',
         marginTop: 4,
     },
     amount: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#ef4444',
+    },
+    dateTime: {
+        fontSize: 12,
+        color: '#94a3b8',
+        marginTop: 4,
     },
 });
 

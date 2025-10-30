@@ -40,12 +40,12 @@ const HomeScreen = () => {
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={styles.welcomeText}>Xin chào!</Text>
-                    <Text style={styles.subtitle}>{packageJson.homeName}</Text>
+                    <Text style={styles.subtitle}>{packageJson.homeName}❤️</Text>
                 </View>
 
                 {/* Quick Stats */}
                 <View style={styles.content}>
-                    <Text style={styles.sectionTitle}>Lịch</Text>
+                    <Text style={styles.sectionTitle}>Bạn sẽ làm gì hôm nay? </Text>
 
                     <Calendar
                         onDayPress={handleDayPress}
