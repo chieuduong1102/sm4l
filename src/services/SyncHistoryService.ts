@@ -33,3 +33,14 @@ export const getSyncHistory = async (): Promise<SyncHistoryItem[]> => {
         return [];
     }
 };
+
+
+// Ví dụ dữ liệu mockup cho lịch sử đồng bộ (SyncHistory):
+// [
+//   { type: 'DB_UP', time: '30/10/2025 09:15:00' },
+//   { type: 'DB_DOWN', time: '29/10/2025 21:30:12' },
+//   { type: 'DB_UP', time: '28/10/2025 08:00:45' }
+// ]
+//
+// Khi gọi getSyncHistory(), sẽ trả về mảng như trên.
+// Khi gọi saveSyncHistory('DB_UP'), sẽ thêm một item mới với type và thời gian hiện tại.

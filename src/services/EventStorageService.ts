@@ -65,3 +65,64 @@ export const getDataAllEventsFromStore = async () => {
         return [];
     }
 };
+
+// Ví dụ dữ liệu mockup cho các hàm:
+//
+// Dữ liệu event lưu trong AsyncStorage với key: event_YYYY-MM-DD
+// [
+//   {
+//     "name": "Ăn sáng",
+//     "amount": 30000,
+//     "category": "Ăn uống",
+//     "time": "0730"
+//   },
+//   {
+//     "name": "Cafe",
+//     "amount": 25000,
+//     "category": "Giải trí",
+//     "time": "0900"
+//   }
+// ]
+//
+// Kết quả trả về của getDataEventsDayFromStore('2025-10-30'):
+// [
+//   {
+//     date: '2025-10-30',
+//     events: [
+//       {
+//         name: 'Cafe',
+//         amount: 25000,
+//         category: 'Giải trí',
+//         time: '0900',
+//         dateTimePay: '30/10/2025 09:00'
+//       },
+//       {
+//         name: 'Ăn sáng',
+//         amount: 30000,
+//         category: 'Ăn uống',
+//         time: '0730',
+//         dateTimePay: '30/10/2025 07:30'
+//       }
+//     ]
+//   }
+// ]
+//
+// Kết quả trả về của getDataAllEventsFromStore():
+// [
+//   {
+//     name: 'Cafe',
+//     amount: 25000,
+//     category: 'Giải trí',
+//     time: '0900',
+//     date: '2025-10-30',
+//     formattedTime: '30/10/2025 09:00'
+//   },
+//   {
+//     name: 'Ăn sáng',
+//     amount: 30000,
+//     category: 'Ăn uống',
+//     time: '0730',
+//     date: '2025-10-30',
+//     formattedTime: '30/10/2025 07:30'
+//   }
+// ]
