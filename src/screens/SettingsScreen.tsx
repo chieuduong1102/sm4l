@@ -35,7 +35,7 @@ const SettingScreen: React.FC = () => {
         <View style={styles.container}>
             <HeaderMain currentTitle="Đồng bộ" />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-                <View style={[styles.section, { marginTop: insets.top + 80 }]}> 
+                <View style={[styles.section, { marginTop: insets.top + 100 }]}> 
                     <Text style={styles.sectionTitle}>Đồng bộ dữ liệu lên Database</Text>
                     <Text style={styles.sectionDesc}>
                         Tính năng này sẽ đồng bộ toàn bộ dữ liệu chi tiêu hiện tại trên máy của bạn lên Database.
@@ -92,7 +92,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f8fafc',
-        padding: 20,
     },
     section: {
         backgroundColor: '#fff',
@@ -104,6 +103,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.08,
         shadowRadius: 4,
         elevation: 2,
+        marginHorizontal: 16,
     },
     sectionTitle: {
         fontSize: 18,
