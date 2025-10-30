@@ -81,9 +81,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logo: {
-        width: width * 0.4,
-        height: width * 0.4,
-        borderRadius: (width * 0.4) / 2,
+        width: width * 0.5,
+        height: width * 0.5,
+        borderRadius: 30,
         borderWidth: 3,
         borderColor: '#ffffff',
     },

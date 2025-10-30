@@ -9,6 +9,7 @@ export const Routes = {
   HISTORY: 'HistoryScreen',
   STATISTICS: 'StatisticsScreen',
   WALLET: 'WalletScreen',
+  SETTINGS: 'SettingsScreen',
 } as const;
 
 export type RootStackParamList = {
@@ -18,4 +19,5 @@ export type RootStackParamList = {
   [Routes.HISTORY]: undefined;
   [Routes.STATISTICS]: undefined;
   [Routes.WALLET]: undefined;
+  [Routes.SETTINGS]: undefined;
 };

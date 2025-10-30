@@ -52,6 +52,7 @@ const AddEventScreen: React.FC = () => {
     }, [selectedDate]);
 
     const isSaveButtonEnabled = selectedTag && amountInput;
+    const isThePastDay = new Date(selectedDate) < new Date(new Date().toDateString());
 
     const expenseTags: ExpenseTag[] = [
         { id: '1', name: 'Ăn uống', icon: 'utensils', color: '#ef4444' },
@@ -209,6 +210,11 @@ const AddEventScreen: React.FC = () => {
                         <Text style={styles.dateValue}>{formatDate(selectedDate)}</Text>
                     </View>
 
+                    {isThePastDay && (
+                        <Text style={{ color: '#ef4444', textAlign: 'center' }}>
+                            Bạn đang thêm chi tiêu cho ngày đã qua.
+                        </Text>
+                    )}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Chọn loại chi tiêu</Text>
                         <FlatList

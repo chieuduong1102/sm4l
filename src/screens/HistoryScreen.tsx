@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MenuMain from '../components/MenuMain';
 import HeaderMain from '../components/HeaderMain';
 import HistoryItem from '../components/HistoryItem';
 import { getDataAllEventsFromStore } from '../services/EventStorageService';

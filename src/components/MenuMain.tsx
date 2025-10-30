@@ -33,6 +33,7 @@ type RootStackParamList = {
     [Routes.HISTORY]: undefined;
     [Routes.STATISTICS]: undefined;
     [Routes.WALLET]: undefined;
+    [Routes.SETTINGS]: undefined;
 };
 
 const MenuMain: React.FC<MenuMainProps> = ({ activeTab }) => {
@@ -64,10 +65,10 @@ const MenuMain: React.FC<MenuMainProps> = ({ activeTab }) => {
             onPress: () => console.log('Wallet pressed'),
         },
         {
-            key: 'menu',
-            icon: ['fas', 'bars'],
-            label: 'Menu',
-            onPress: () => console.log('Menu pressed'),
+            key: 'settings',
+            icon: ['fas', 'rotate'],
+            label: 'Đồng bộ',
+            onPress: () => navigation.navigate(Routes.SETTINGS),
         },
     ];
 
