@@ -64,7 +64,7 @@ const MenuMain: React.FC<MenuMainProps> = ({ activeTab = 'home' }) => {
         },
         {
             key: 'home',
-            icon: ['fas', 'home'],
+            icon: ['fas', 'circle-plus'],
             label: 'Trang chủ',
             onPress: navigateToHome,
         },
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 3.84,
         elevation: 5,
+        height: 70,
     },
     menuBar: {
         flexDirection: 'row',
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     menuItem: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 4,
+        paddingVertical: 10,
         paddingHorizontal: 8,
         minWidth: width / 5 - 10,
     },

@@ -5,6 +5,7 @@ export const Routes = {
   
   // Main App
   HOME: 'HomeScreen',
+  ADD_EVENT: 'AddEventScreen',
   HISTORY: 'History',
   STATISTICS: 'Statistics',  
   WALLET: 'Wallet',
@@ -14,4 +15,5 @@ export const Routes = {
 export type RootStackParamList = {
   [Routes.START_SCREEN]: undefined;
   [Routes.HOME]: undefined;
+  [Routes.ADD_EVENT]: { selectedDate: string };
 };

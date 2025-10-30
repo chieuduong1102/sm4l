@@ -31,6 +31,8 @@
     cd ..
 
 #npm
+    npx react-native start --reset-cache
+
     npm i
     npm run android
     npm run ios
