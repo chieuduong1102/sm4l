@@ -11,6 +11,8 @@ import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Routes, RootStackParamList } from '../navigations/Routes';
+import HeaderMain from '../components/HeaderMain';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const getCurrentDate = (): string => {
     const date = new Date();
@@ -20,11 +22,10 @@ const getCurrentDate = (): string => {
     return `${year}-${month}-${day}`;
 };
 
-
-
 type StartScreenNavigationProp = StackNavigationProp<RootStackParamList, typeof Routes.HOME>;
 
 const HomeScreen = () => {
+    const insets = useSafeAreaInsets();
     const navigation = useNavigation<StartScreenNavigationProp>();
         
     const handleDayPress = (day: { dateString: string }) => {
@@ -36,13 +37,8 @@ const HomeScreen = () => {
     
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.welcomeText}>Xin chào!</Text>
-                    <Text style={styles.subtitle}>{packageJson.homeName}❤️</Text>
-                </View>
-
+            <HeaderMain currentTitle="Welcome," />
+            <ScrollView style={[styles.content, { marginTop: insets.top + 80}]} showsVerticalScrollIndicator={false}>
                 {/* Quick Stats */}
                 <View style={styles.content}>
                     <Text style={styles.sectionTitle}>Bạn sẽ làm gì hôm nay? </Text>
@@ -104,20 +100,6 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: 16,
-    },
-    header: {
-        paddingTop: 20,
-        paddingBottom: 24,
-    },
-    welcomeText: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#1a365d',
-        marginBottom: 4,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#64748b',
     },
     sectionTitle: {
         fontSize: 20,

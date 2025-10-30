@@ -10,14 +10,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
-
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
+import { Routes } from '../navigations/Routes';
 // Add FontAwesome icons to library
 library.add(fas);
 
 const { width } = Dimensions.get('window');
 
 interface MenuMainProps {
-    activeTab?: string;
+    activeTab: string;
 }
 
 interface MenuItem {
@@ -27,58 +28,46 @@ interface MenuItem {
     onPress: () => void;
 }
 
-const MenuMain: React.FC<MenuMainProps> = ({ activeTab = 'home' }) => {
-    // Navigation functions
-    const navigateToHistory = () => {
-        console.log('Navigate to History Screen');
-    };
+type RootStackParamList = {
+    [Routes.HOME]: undefined;
+    [Routes.HISTORY]: undefined;
+    [Routes.STATISTICS]: undefined;
+    [Routes.WALLET]: undefined;
+};
 
-    const navigateToStatistics = () => {
-        console.log('Navigate to Statistics Screen');
-    };
-
-    const navigateToHome = () => {
-        console.log('Navigate to Home Screen');
-    };
-
-    const navigateToWallet = () => {
-        console.log('Navigate to Wallet Screen');
-    };
-
-    const navigateToMenu = () => {
-        console.log('Navigate to Menu Screen');
-    };
+const MenuMain: React.FC<MenuMainProps> = ({ activeTab }) => {
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
     const menuItems: MenuItem[] = [
         {
             key: 'history',
             icon: ['fas', 'history'],
             label: 'Lịch sử',
-            onPress: navigateToHistory,
+            onPress: () => navigation.navigate(Routes.HISTORY),
         },
         {
             key: 'statistics',
             icon: ['fas', 'chart-bar'],
             label: 'Thống kê',
-            onPress: navigateToStatistics,
+            onPress: () => console.log('Statistics pressed'),
         },
         {
             key: 'home',
             icon: ['fas', 'circle-plus'],
             label: 'Trang chủ',
-            onPress: navigateToHome,
+            onPress: () => navigation.navigate(Routes.HOME),
         },
         {
             key: 'wallet',
             icon: ['fas', 'wallet'],
             label: 'Ví',
-            onPress: navigateToWallet,
+            onPress: () => console.log('Wallet pressed'),
         },
         {
             key: 'menu',
             icon: ['fas', 'bars'],
             label: 'Menu',
-            onPress: navigateToMenu,
+            onPress: () => console.log('Menu pressed'),
         },
     ];
 

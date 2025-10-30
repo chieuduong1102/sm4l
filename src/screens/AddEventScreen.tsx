@@ -16,7 +16,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { RootStackParamList, Routes } from '../navigations/Routes';
-import HeaderMain from '../components/HeaderMain';
+import HeaderBack from '../components/HeaderBack';
 import HistoryItem from '../components/HistoryItem';
 import { getDataEventsDayFromStore, saveDataEventDayToStore } from '../services/EventStorageService';
 
@@ -198,7 +198,7 @@ const AddEventScreen: React.FC = () => {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             <View style={[styles.container, { paddingTop: insets.top + 60 }]}>
-                <HeaderMain
+                <HeaderBack
                     title="Thêm chi tiêu"
                     onBackPress={() => navigation.goBack()}
                 />

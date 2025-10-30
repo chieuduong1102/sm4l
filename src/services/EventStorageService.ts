@@ -46,5 +46,22 @@ export const getDataEventsMonthFromStore = async (date: string) => {
 };
 
 export const getDataAllEventsFromStore = async () => {
-    //logic get all events from storage
+    try {
+        const keys = await AsyncStorage.getAllKeys();
+        const eventKeys = keys.filter((key) => key.startsWith('event_'));
+
+        const events = await AsyncStorage.multiGet(eventKeys);
+        return events.flatMap(([key, value]) => {
+            const date = key.replace('event_', '');
+            const parsedEvents = value ? JSON.parse(value) : [];
+            return parsedEvents.map((event: any) => ({
+                ...event,
+                date,
+                formattedTime: `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}`,
+            }));
+        });
+    } catch (error) {
+        console.error('Error retrieving all events:', error);
+        return [];
+    }
 };
