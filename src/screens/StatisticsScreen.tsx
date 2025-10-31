@@ -6,6 +6,7 @@ import HeaderMain from '../components/HeaderMain';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getWalletHistory } from '../services/WalletHistoryService';
+import { ScrollView as RNScrollView } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -136,8 +137,8 @@ const StatisticsScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <HeaderMain currentTitle="Thống kê" />
-            <ScrollView style={{flex: 1}} contentContainerStyle={{paddingBottom: 32}}>
-                <View style={[styles.chartEvents, { marginTop: insets.top + 100}]}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
+                <View style={[styles.headerContainer, { marginTop: insets.top + 100 }]}>
                     <Text style={styles.label}>Thông kê hàng tháng</Text>
                     <View style={styles.monthPicker}>
                         {monthList.map(month => (
@@ -152,83 +153,91 @@ const StatisticsScreen: React.FC = () => {
                             </TouchableOpacity>
                         ))}
                     </View>
+                </View>
+                <View style={[styles.chartGroupContainer, {paddingBottom: insets.bottom + 40}]}>
                     <View style={styles.chartContainer}>
                         <Text style={styles.chartTitle}>Biểu đồ chi tiêu tháng</Text>
-                        {data.length > 0 ? (
-                            <LineChart
-                                data={{
-                                    labels: labels.map(day => String(Number(day))), // hiển thị ngày dạng số
-                                    datasets: [{ data }],
-                                }}
-                                width={width - 32}
-                                height={260}
-                                yAxisSuffix=""
-                                yLabelsOffset={8}
-                                chartConfig={{
-                                    backgroundColor: '#fff',
-                                    backgroundGradientFrom: '#fff',
-                                    backgroundGradientTo: '#fff',
-                                    decimalPlaces: 0,
-                                    color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                                    labelColor: () => '#64748b',
-                                    style: { borderRadius: 16 },
-                                    propsForDots: {
-                                        r: '4',
-                                        strokeWidth: '2',
-                                        stroke: '#2563eb',
-                                    },
-                                    formatYLabel: formatMoney,
-                                }}
-                                bezier
-                                style={{ borderRadius: 16 }}
-                                formatYLabel={formatMoney}
-                            />
-                        ) : (
-                            <Text style={styles.noData}>Không có dữ liệu chi tiêu tháng này.</Text>
-                        )}
+                        <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {data.length > 0 ? (
+                                <LineChart
+                                    data={{
+                                        labels: labels.map(day => String(Number(day))), // hiển thị ngày dạng số
+                                        datasets: [{ data }],
+                                        legend: ['Số tiền đã chi tiêu (cộng dồn)'],
+                                    }}
+                                    width={Math.max((labels.length || 1) * 40, width - 32)}
+                                    height={260}
+                                    yAxisSuffix=""
+                                    yLabelsOffset={8}
+                                    chartConfig={{
+                                        backgroundColor: '#fff',
+                                        backgroundGradientFrom: '#fff',
+                                        backgroundGradientTo: '#fff',
+                                        decimalPlaces: 0,
+                                        color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+                                        labelColor: () => '#64748b',
+                                        style: { borderRadius: 4 },
+                                        propsForDots: {
+                                            r: '4',
+                                            strokeWidth: '2',
+                                            stroke: '#2563eb',
+                                        },
+                                        formatYLabel: formatMoney,
+                                    }}
+                                    bezier
+                                    style={{ borderRadius: 4 }}
+                                    formatYLabel={formatMoney}
+                                />
+                            ) : (
+                                <Text style={styles.noData}>Không có dữ liệu chi tiêu tháng này.</Text>
+                            )}
+                        </RNScrollView>
                     </View>
                     <View style={styles.chartContainer}>
                         <Text style={styles.chartTitle}>Biểu đồ ví tháng này</Text>
-                        {walletMonthLabels.length > 0 ? (
-                            <LineChart
-                                data={{
-                                    labels: walletMonthLabels.map(day => String(Number(day))),
-                                    datasets: [
-                                        { data: walletMonthAdded, color: () => '#2563eb', strokeWidth: 2, withDots: true },
-                                        { data: walletMonthSpent, color: () => '#ef4444', strokeWidth: 2, withDots: true },
-                                    ],
-                                    legend: ['Nạp vào', 'Đã dùng'],
-                                }}
-                                width={width - 32}
-                                height={260}
-                                yAxisSuffix=""
-                                yLabelsOffset={8}
-                                chartConfig={{
-                                    backgroundColor: '#fff',
-                                    backgroundGradientFrom: '#fff',
-                                    backgroundGradientTo: '#fff',
-                                    decimalPlaces: 0,
-                                    color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                                    labelColor: () => '#64748b',
-                                    style: { borderRadius: 16 },
-                                    propsForDots: {
-                                        r: '4',
-                                        strokeWidth: '2',
-                                        stroke: '#2563eb',
-                                    },
-                                    formatYLabel: formatMoney,
-                                }}
-                                bezier
-                                style={{ borderRadius: 16 }}
-                                formatYLabel={formatMoney}
-                            />
-                        ) : (
-                            <Text style={styles.noData}>Không có dữ liệu ví tháng này.</Text>
-                        )}
+                        <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {/* {walletMonthLabels.length > 0 ? (
+                                <LineChart
+                                    data={{
+                                        labels: walletMonthLabels.map(day => String(Number(day))),
+                                        datasets: [
+                                            { data: walletMonthAdded, color: () => '#2563eb', strokeWidth: 2, withDots: true },
+                                            { data: walletMonthSpent, color: () => '#ef4444', strokeWidth: 2, withDots: true },
+                                        ],
+                                        legend: ['Nạp vào', 'Đã dùng'],
+                                    }}
+                                    width={Math.max((walletMonthLabels.length || 1) * 40, width - 32)}
+                                    height={260}
+                                    yAxisSuffix=""
+                                    yLabelsOffset={8}
+                                    chartConfig={{
+                                        backgroundColor: '#fff',
+                                        backgroundGradientFrom: '#fff',
+                                        backgroundGradientTo: '#fff',
+                                        decimalPlaces: 0,
+                                        color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+                                        labelColor: () => '#64748b',
+                                        style: { borderRadius: 4 },
+                                        propsForDots: {
+                                            r: '4',
+                                            strokeWidth: '2',
+                                            stroke: '#2563eb',
+                                        },
+                                        formatYLabel: formatMoney,
+                                    }}
+                                    bezier
+                                    style={{ borderRadius: 4 }}
+                                    formatYLabel={formatMoney}
+                                />
+                            ) : (
+                                <Text style={styles.noData}>Không có dữ liệu ví tháng này.</Text>
+                            )} */}
+                            <Text style={styles.noData}>Coming soon...</Text>
+                        </RNScrollView>
                     </View>
                 </View>
-            </ScrollView>
-        </View>
+            </ScrollView >
+        </View >
     );
 };
 
@@ -237,9 +246,15 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f8fafc',
     },
+    headerContainer: {
+        paddingHorizontal: 16,
+    },
     chartEvents: {
         flex: 1,
         paddingHorizontal: 16,
+    },
+    chartGroupContainer: {
+
     },
     label: {
         fontSize: 20,
@@ -273,12 +288,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     chartContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        marginHorizontal: 16,
         padding: 16,
         alignItems: 'center',
-        minHeight: 300,
         justifyContent: 'center',
     },
     noData: {
