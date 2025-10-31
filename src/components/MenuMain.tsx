@@ -50,7 +50,7 @@ const MenuMain: React.FC<MenuMainProps> = ({ activeTab }) => {
             key: 'statistics',
             icon: ['fas', 'chart-bar'],
             label: 'Thống kê',
-            onPress: () => console.log('Statistics pressed'),
+            onPress: () => navigation.navigate(Routes.STATISTICS),
         },
         {
             key: 'home',
