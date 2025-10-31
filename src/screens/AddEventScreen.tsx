@@ -41,7 +41,7 @@ const AddEventScreen: React.FC = () => {
     const [showEventInput, setShowEventInput] = useState(false);
     const [eventInput, setEventInput] = useState('');
     const [showDetailInput, setShowDetailInput] = useState(false);
-    const [history, setHistory] = useState<{ date: string; events: { id: string, tag: string; amount: number; formattedAmount: string; detail: string; dateTimePay: string; }[] }[]>([]);
+    const [history, setHistory] = useState<{ date: string; events: { id: string, tag: string; amount: number; formattedAmount: string; detail: string; dateTimePay: string; userPay: string }[] }[]>([]);
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -319,6 +319,7 @@ const AddEventScreen: React.FC = () => {
                                         detail={event.detail}
                                         amount={event.formattedAmount}
                                         dateTimePay={event.dateTimePay || ''}
+                                        userPay={event.userPay}
                                     />
                                 ))
                             ))

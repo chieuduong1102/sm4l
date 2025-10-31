@@ -58,7 +58,7 @@ export const getDataAllEventsFromStore = async () => {
         const eventKeys = keys.filter((key) => key.startsWith('event_'));
 
         const events = await AsyncStorage.multiGet(eventKeys);
-        return events.flatMap(([key, value]) => {
+        const allEvents = events.flatMap(([key, value]) => {
             const date = key.replace('event_', '');
             const parsedEvents = value ? JSON.parse(value) : [];
             return parsedEvents.map((event: any) => ({
@@ -67,6 +67,9 @@ export const getDataAllEventsFromStore = async () => {
                 formattedTime: `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}`,
             }));
         });
+        // Sắp xếp giảm dần theo formattedTime (mới nhất trước)
+        allEvents.sort((a, b) => b.formattedTime.localeCompare(a.formattedTime));
+        return allEvents;
     } catch (error) {
         console.error('Error retrieving all events:', error);
         return [];
@@ -123,6 +126,7 @@ export const getDataAllEventsFromStore = async () => {
 //     time: '0900',
 //     date: '2025-10-30',
 //     formattedTime: '30/10/2025 09:00'
+//     userPay: 'Duong'
 //   },
 //   {
 //     name: 'Ăn sáng',
@@ -131,5 +135,6 @@ export const getDataAllEventsFromStore = async () => {
 //     time: '0730',
 //     date: '2025-10-30',
 //     formattedTime: '30/10/2025 07:30'
+//     userPay: 'Duong'
 //   }
 // ]

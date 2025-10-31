@@ -8,9 +8,10 @@ interface HistoryItemProps {
     detail?: string;
     amount: string;
     dateTimePay: string;
+    userPay: string;
 }
 
-const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amount, dateTimePay }) => {
+const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amount, dateTimePay, userPay }) => {
     const [profileName, setProfileName] = useState<string | null>(null);
 
     useEffect(() => {
@@ -23,8 +24,8 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amoun
                 <Text style={styles.eventName}>{eventName}</Text>
                 {detail && <Text style={styles.detail}>{detail}</Text>}
                 <Text style={styles.dateTime}>{dateTimePay}</Text>
-                {profileName && (
-                    <Text style={styles.byName}>by: <Text style={styles.byNameValue}>{profileName}</Text></Text>
+                {userPay && (
+                    <Text style={styles.byName}>by: <Text style={styles.byNameValue}>{userPay}</Text></Text>
                 )}
             </View>
             <Text style={styles.amount}>- {amount}</Text>

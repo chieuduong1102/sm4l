@@ -41,6 +41,7 @@ const HistoryScreen: React.FC = () => {
                                 detail={event.detail}
                                 amount={event.formattedAmount}
                                 dateTimePay={event.formattedTime}
+                                userPay={event.userPay}
                             />
                         ))}
                     </View>
