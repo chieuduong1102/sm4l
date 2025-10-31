@@ -11,6 +11,7 @@ export const Routes = {
   WALLET: 'WalletScreen',
   SETTINGS: 'SettingsScreen',
   SETPROFILE: 'SetProfileScreen',
+  SYNC_SETTING: 'SettingSyncScreen',
 } as const;
 
 export type RootStackParamList = {
@@ -22,4 +23,5 @@ export type RootStackParamList = {
   [Routes.WALLET]: undefined;
   [Routes.SETTINGS]: undefined;
   [Routes.SETPROFILE]: undefined;
+  [Routes.SYNC_SETTING]: undefined;
 };

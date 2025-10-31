@@ -1,21 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HeaderMain from '../components/HeaderMain';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
-import { saveSyncHistory, getSyncHistory, SyncHistoryItem } from '../services/SyncHistoryService';
+import { saveSyncHistory, getSyncHistory, SyncHistoryItem, syncWalletUp, syncWalletDown } from '../services/SyncHistoryService';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Routes } from '../navigations/Routes';
 
 library.add(fas);
 
 const SettingScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
     const [syncHistory, setSyncHistory] = useState<SyncHistoryItem[]>([]);
+    const [showSyncSetting, setShowSyncSetting] = useState(false);
+    const [endpoint, setEndpoint] = useState('');
+    const navigation = useNavigation();
 
     useEffect(() => {
         fetchHistory();
     }, []);
+
+    useEffect(() => {
+        if (showSyncSetting) {
+            AsyncStorage.getItem('sync_endpoint').then(val => {
+                if (val) setEndpoint(val);
+            });
+        }
+    }, [showSyncSetting]);
 
     const fetchHistory = async () => {
         const history = await getSyncHistory();
@@ -24,18 +38,44 @@ const SettingScreen: React.FC = () => {
 
     const handleSyncUp = async () => {
         await saveSyncHistory('DB_UP');
+        await syncWalletUp();
         fetchHistory();
     };
     const handleSyncDown = async () => {
         await saveSyncHistory('DB_DOWN');
+        await syncWalletDown();
         fetchHistory();
+    };
+
+    const handleSaveEndpoint = async () => {
+        await AsyncStorage.setItem('sync_endpoint', endpoint.trim());
+        Alert('Đã lưu endpoint!');
     };
 
     return (
         <View style={styles.container}>
             <HeaderMain currentTitle="Đồng bộ" />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-                <View style={[styles.section, { marginTop: insets.top + 100 }]}> 
+                <TouchableOpacity style={[styles.syncSettingBtn, { marginTop: insets.top + 100 }]} onPress={() => setShowSyncSetting(v => !v)}>
+                    <FontAwesomeIcon icon={['fas', showSyncSetting ? 'chevron-up' : 'chevron-down']} color="#1a365d" size={16} />
+                    <Text style={styles.syncSettingBtnText}>{showSyncSetting ? 'Thu gọn' : 'Cài đặt đồng bộ'}</Text>
+                </TouchableOpacity>
+                {showSyncSetting && (
+                    <View style={styles.syncSettingView}>
+                        <Text style={styles.labelEnpoint}>Endpoint</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={endpoint}
+                            onChangeText={setEndpoint}
+                            placeholder="Nhập endpoint"
+                            autoCapitalize="none"
+                        />
+                        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveEndpoint}>
+                            <Text style={styles.saveBtnText}>Lưu</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                <View style={[styles.section]}> 
                     <Text style={styles.sectionTitle}>Đồng bộ dữ liệu lên Database</Text>
                     <Text style={styles.sectionDesc}>
                         Tính năng này sẽ đồng bộ toàn bộ dữ liệu chi tiêu hiện tại trên máy của bạn lên Database.
@@ -168,6 +208,66 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#1a365d',
     },
+    syncSettingBtn: {
+        flexDirection: 'row',
+        backgroundColor: '#e3f2fd',
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginHorizontal: 16,
+        marginBottom: 16,
+        alignSelf: 'flex-end',
+        paddingHorizontal: 16,
+    },
+    syncSettingBtnText: {
+        color: '#1a365d',
+        fontWeight: 'bold',
+        fontSize: 16,
+        marginLeft: 8,
+    },
+    syncSettingView: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    labelEnpoint: {
+        fontSize: 14,
+        color: '#1a365d',
+        marginBottom: 8,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#cbd5e1',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        marginBottom: 20,
+        backgroundColor: '#f8fafc',
+    },
+    saveBtn: {
+        backgroundColor: '#1a365d',
+        borderRadius: 8,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    saveBtnText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
 });
 
 export default SettingScreen;
+function Alert(arg0: string) {
+    throw new Error('Function not implemented.');
+}
+
