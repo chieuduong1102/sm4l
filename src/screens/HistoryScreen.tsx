@@ -30,6 +30,9 @@ const HistoryScreen: React.FC = () => {
         <View style={styles.container}>
             <HeaderMain currentTitle="Lịch sử chi tiêu" />
             <ScrollView contentContainerStyle={[styles.content, { marginTop: insets.top + 80 }]}>
+                {Object.keys(groupedHistory).length === 0 && (
+                    <Text style={{ color: '#64748b', textAlign: 'center', marginTop: 32 }}>Chưa có lịch sử chi tiêu</Text>
+                )}
                 {Object.keys(groupedHistory).map((monthYear) => (
                     <View key={monthYear} style={styles.monthSection}>
                         <Text style={styles.monthTitle}>Tháng {monthYear.slice(5, 7)}/{monthYear.slice(0, 4)}</Text>

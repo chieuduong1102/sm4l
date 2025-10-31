@@ -62,7 +62,7 @@ const MenuMain: React.FC<MenuMainProps> = ({ activeTab }) => {
             key: 'wallet',
             icon: ['fas', 'wallet'],
             label: 'Ví',
-            onPress: () => console.log('Wallet pressed'),
+            onPress: () => navigation.navigate(Routes.WALLET),
         },
         {
             key: 'settings',

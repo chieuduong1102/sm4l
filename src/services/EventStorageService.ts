@@ -49,7 +49,28 @@ export const getDataEventsDayFromStore = async (date: string) => {
 };
 
 export const getDataEventsMonthFromStore = async (date: string) => {
-    //logic get all events in month from storage
+    try {
+        const keys = await AsyncStorage.getAllKeys();
+        const eventKeys = keys.filter((key) => key.startsWith('event_'));
+        const month = date.slice(0, 7); // yyyy-MM
+        const events = await AsyncStorage.multiGet(eventKeys);
+        const monthEvents = events.flatMap(([key, value]) => {
+            const eventDate = key.replace('event_', '');
+            if (!eventDate.startsWith(month)) return [];
+            const parsedEvents = value ? JSON.parse(value) : [];
+            return parsedEvents.map((event: any) => ({
+                ...event,
+                date: eventDate,
+                formattedTime: `${eventDate.slice(8, 10)}/${eventDate.slice(5, 7)}/${eventDate.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}`,
+            }));
+        });
+        // Sắp xếp giảm dần theo formattedTime
+        monthEvents.sort((a, b) => b.formattedTime.localeCompare(a.formattedTime));
+        return monthEvents;
+    } catch (error) {
+        console.error('Error retrieving month events:', error);
+        return [];
+    }
 };
 
 export const getDataAllEventsFromStore = async () => {

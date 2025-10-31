@@ -10,6 +10,7 @@ import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import MenuMain from '../components/MenuMain';
 import SetProfileScreen from '../screens/SetProfileScreen';
+import WalletScreen from '../screens/WalletScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -70,6 +71,14 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ onStateChange }) => {
                 <Stack.Screen 
                     name={Routes.SETPROFILE} 
                     component={SetProfileScreen}
+                />
+                <Stack.Screen 
+                    name={Routes.STATISTICS} 
+                    component={HomeScreen}
+                />
+                <Stack.Screen 
+                    name={Routes.WALLET} 
+                    component={WalletScreen}
                 />
             </Stack.Navigator>
             {currentRoute !== Routes.START_SCREEN && currentRoute !== Routes.SETPROFILE && (
