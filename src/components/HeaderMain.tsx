@@ -18,13 +18,13 @@ const HeaderMain: React.FC<{ currentTitle: string }> = ({ currentTitle }) => {
     }, []);
 
     return (
-        <View style={[styles.header, { paddingTop: insets.top, height: insets.top + 80 }]}>
-            <Text style={styles.titleScreen}>
-                {currentTitle}
+        <View style={[styles.header, { paddingTop: insets.top, height: insets.top + 80 }]}> 
+            <View style={styles.headerRow}>
+                <Text style={styles.titleScreen}>{currentTitle}</Text>
                 {profileName ? (
-                    <Text style={styles.profileName}>{` ${profileName}`}</Text>
-                ) : ''}
-            </Text>
+                    <Text style={styles.profileName}>{profileName}</Text>
+                ) : null}
+            </View>
             <Text style={styles.subtitle}>{packageJson.homeName}❤️</Text>
         </View>
     );
@@ -49,6 +49,12 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
         elevation: 2,
     },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
     titleScreen: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -58,7 +64,7 @@ const styles = StyleSheet.create({
     profileName: {
         color: '#2563eb', // màu xanh nổi bật
         fontWeight: 'bold',
-        fontSize: 26,
+        fontSize: 20,
     },
     subtitle: {
         fontSize: 16,

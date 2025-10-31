@@ -37,7 +37,7 @@ const HomeScreen = () => {
     
     return (
         <SafeAreaView style={styles.container}>
-            <HeaderMain currentTitle="Welcome," />
+            <HeaderMain currentTitle="Welcome to" />
             <ScrollView style={[styles.content, { marginTop: insets.top + 80}]} showsVerticalScrollIndicator={false}>
                 {/* Quick Stats */}
                 <View style={styles.content}>
