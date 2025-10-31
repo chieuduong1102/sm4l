@@ -1,19 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import packageJson from '../../package.json';
 
 const HeaderMain: React.FC<{ currentTitle: string }> = ({ currentTitle }) => {
     const insets = useSafeAreaInsets();
+    const [profileName, setProfileName] = useState<string | null>(null);
+
+    useEffect(() => {
+        AsyncStorage.getItem('profile_name').then(setProfileName);
+    }, []);
 
     return (
         <View style={[styles.header, { paddingTop: insets.top, height: insets.top + 80 }]}>
-            <Text style={styles.titleScreen}>{currentTitle}</Text>
+            <Text style={styles.titleScreen}>
+                {currentTitle}
+                {profileName ? (
+                    <Text style={styles.profileName}>{` ${profileName}`}</Text>
+                ) : ''}
+            </Text>
             <Text style={styles.subtitle}>{packageJson.homeName}❤️</Text>
         </View>
     );
@@ -39,10 +50,15 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     titleScreen: {
-        fontSize: 28,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#1a365d',
         marginBottom: 4,
+    },
+    profileName: {
+        color: '#2563eb', // màu xanh nổi bật
+        fontWeight: 'bold',
+        fontSize: 26,
     },
     subtitle: {
         fontSize: 16,

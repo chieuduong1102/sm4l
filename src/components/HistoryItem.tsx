@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface HistoryItemProps {
     eventName: string;
@@ -10,12 +11,21 @@ interface HistoryItemProps {
 }
 
 const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amount, dateTimePay }) => {
+    const [profileName, setProfileName] = useState<string | null>(null);
+
+    useEffect(() => {
+        AsyncStorage.getItem('profile_name').then(setProfileName);
+    }, []);
+
     return (
         <View style={styles.container}>
             <View style={styles.textContainer}>
                 <Text style={styles.eventName}>{eventName}</Text>
                 {detail && <Text style={styles.detail}>{detail}</Text>}
                 <Text style={styles.dateTime}>{dateTimePay}</Text>
+                {profileName && (
+                    <Text style={styles.byName}>by: <Text style={styles.byNameValue}>{profileName}</Text></Text>
+                )}
             </View>
             <Text style={styles.amount}>- {amount}</Text>
         </View>
@@ -66,6 +76,15 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#94a3b8',
         marginTop: 4,
+    },
+    byName: {
+        fontSize: 12,
+        color: '#64748b',
+        marginTop: 2,
+    },
+    byNameValue: {
+        color: '#2563eb',
+        fontWeight: 'bold',
     },
 });
 

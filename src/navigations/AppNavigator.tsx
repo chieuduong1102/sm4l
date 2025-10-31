@@ -9,6 +9,7 @@ import AddEventScreen from '../screens/AddEventScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import MenuMain from '../components/MenuMain';
+import SetProfileScreen from '../screens/SetProfileScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -66,8 +67,12 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ onStateChange }) => {
                     name={Routes.SETTINGS} 
                     component={SettingsScreen}
                 />
+                <Stack.Screen 
+                    name={Routes.SETPROFILE} 
+                    component={SetProfileScreen}
+                />
             </Stack.Navigator>
-            {currentRoute !== Routes.START_SCREEN && (
+            {currentRoute !== Routes.START_SCREEN && currentRoute !== Routes.SETPROFILE && (
                 <MenuMain activeTab={routeToTab[currentRoute] || 'home'} />
             )}
         </NavigationContainer>

@@ -9,7 +9,14 @@ export const saveDataEventDayToStore = async (date: string, event: any) => {
         const existingData = await AsyncStorage.getItem(key);
         const parsedData = existingData ? JSON.parse(existingData) : [];
 
-        const newEvent = { ...event, time };
+        // Lấy tên profile_name từ AsyncStorage
+        let userPay = '';
+        try {
+            const profileName = await AsyncStorage.getItem('profile_name');
+            if (profileName) userPay = profileName;
+        } catch {}
+
+        const newEvent = { ...event, time, userPay };
         parsedData.push(newEvent);
 
         await AsyncStorage.setItem(key, JSON.stringify(parsedData));

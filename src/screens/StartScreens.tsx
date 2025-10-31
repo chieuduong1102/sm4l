@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Routes, RootStackParamList } from '../navigations/Routes';
 
@@ -23,8 +24,13 @@ const StartScreen = () => {
 
     useEffect(() => {
         // Auto navigate to Main Tabs after 3 seconds
-        const timer = setTimeout(() => {
-            navigation.navigate(Routes.HOME);
+        const timer = setTimeout(async () => {
+            const name = await AsyncStorage.getItem('profile_name');
+            if (name && name.trim()) {
+                navigation.navigate(Routes.HOME);
+            } else {
+                navigation.navigate(Routes.SETPROFILE);
+            }
         }, 3000);
 
         // Cleanup timer if component unmounts
