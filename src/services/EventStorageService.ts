@@ -86,6 +86,7 @@ export const getDataAllEventsFromStore = async () => {
                 ...event,
                 date,
                 formattedTime: `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}:${event.time.slice(4, 6) || '00'}`,
+                dateTimePay: `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}:${event.time.slice(4, 6) || '00'}`,
             }));
         });
         // Sắp xếp giảm dần theo formattedTime (mới nhất trước)

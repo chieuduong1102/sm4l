@@ -32,7 +32,7 @@ export const saveSyncHistory = async (type: SyncType) => {
             // Lấy data events và call API POST
             const allEvents = await getDataAllEventsFromStore();
             const eventsData = allEvents.map(event => ({
-                name: event.name || '',
+                name: event.name || event.eventName || '',
                 amount: event.amount || 0,
                 category: event.category || event.tag || '',
                 time: event.time || '',
@@ -41,7 +41,11 @@ export const saveSyncHistory = async (type: SyncType) => {
                 userPay: event.userPay || ''
             }));
 
-            const response = await fetch(`${endpoint.trim()}/insertDataEvent`, {
+            const url = `${endpoint.trim()}/insertDataEvent`;
+            console.log('API URL:', url);
+            console.log('Request data:', JSON.stringify(eventsData, null, 2));
+
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,6 +53,7 @@ export const saveSyncHistory = async (type: SyncType) => {
                 body: JSON.stringify(eventsData)
             });
 
+            console.log('Response status:', response.status);
             if (response.ok) {
                 Alert.alert('Thành công', 'Đã đồng bộ dữ liệu lên server thành công');
                 const newItem: SyncHistoryItem = { type, time };
@@ -57,7 +62,9 @@ export const saveSyncHistory = async (type: SyncType) => {
                 history.unshift(newItem);
                 await AsyncStorage.setItem(SYNC_HISTORY_KEY, JSON.stringify(history));
             } else {
-                Alert.alert('Lỗi', `Không thể đồng bộ lên server. Status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('API Error:', errorText);
+                Alert.alert('Lỗi', `Không thể đồng bộ lên server. Status: ${response.status}\nError: ${errorText}`);
             }
 
         } else if (type === 'DB_DOWN') {
@@ -66,13 +73,17 @@ export const saveSyncHistory = async (type: SyncType) => {
             const month = now.getMonth() + 1;
             const year = now.getFullYear();
             
-            const response = await fetch(`${endpoint.trim()}/getAllDataEvent?month=${month}&year=${year}`, {
+            const url = `${endpoint.trim()}/getAllDataEvent?month=${month}&year=${year}`;
+            console.log('API URL:', url);
+
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 }
             });
 
+            console.log('Response status:', response.status);
             if (response.ok) {
                 const responseText = await response.text();
                 console.log('API Response:', responseText);
