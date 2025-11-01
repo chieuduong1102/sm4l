@@ -29,7 +29,13 @@ const HistoryScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <HeaderMain currentTitle="Lịch sử chi tiêu" />
-            <ScrollView contentContainerStyle={[styles.content, { marginTop: insets.top + 80, paddingBottom: insets.bottom + 20 }]}>    
+            <ScrollView 
+                contentContainerStyle={[styles.content, { 
+                    paddingTop: insets.top + 80,
+                    paddingBottom: insets.bottom + 100 // Thêm padding bottom đủ lớn
+                }]}
+                showsVerticalScrollIndicator={false}
+            >    
                 {Object.keys(groupedHistory).length === 0 && (
                     <Text style={{ color: '#64748b', textAlign: 'center', marginTop: 32 }}>Chưa có lịch sử chi tiêu</Text>
                 )}
@@ -38,12 +44,11 @@ const HistoryScreen: React.FC = () => {
                         <Text style={styles.monthTitle}>Tháng {monthYear.slice(5, 7)}/{monthYear.slice(0, 4)}</Text>
                         {groupedHistory[monthYear].map((event) => (
                             <HistoryItem
-                                key={event.id}
-                                eventName={event.tag}
+                                key={`${event.date}${event.time}`}                                eventName={event.tag}
                                 tag={event.tag}
                                 detail={event.detail}
                                 amount={event.formattedAmount}
-                                dateTimePay={event.formattedTime}
+                                dateTimePay={event.dateTimePay || event.formattedTime}
                                 userPay={event.userPay}
                             />
                         ))}
@@ -58,11 +63,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f8fafc',
+        paddingBottom: 16,
     },
     content: {
-        flex: 1,
         paddingHorizontal: 16,
         paddingTop: 16,
+        // Bỏ flex: 1 để scroll hoạt động đúng
     },
     monthSection: {
         marginBottom: 24,

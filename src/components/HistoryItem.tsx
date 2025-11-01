@@ -22,6 +22,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amoun
         <View style={styles.container}>
             <View style={styles.textContainer}>
                 <Text style={styles.eventName}>{eventName}</Text>
+                <Text style={styles.tag}>{tag}</Text>
                 {detail && <Text style={styles.detail}>{detail}</Text>}
                 <Text style={styles.dateTime}>{dateTimePay}</Text>
                 {userPay && (

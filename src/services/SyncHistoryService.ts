@@ -18,7 +18,8 @@ export const saveSyncHistory = async (type: SyncType) => {
     const now = new Date();
     const pad = (n: number) => n.toString().padStart(2, '0');
     const time = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    
+    const currentMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+    const currentYear = `${now.getFullYear()}`;
     try {
         // Lấy endpoint từ store
         const endpoint = await AsyncStorage.getItem('sync_endpoint');
@@ -31,7 +32,7 @@ export const saveSyncHistory = async (type: SyncType) => {
             // Lấy data events và call API POST
             const allEvents = await getDataAllEventsFromStore();
             const eventsData = allEvents.map(event => ({
-                name: event.name || event.eventName || '',
+                name: event.details || '',
                 amount: event.amount || 0,
                 category: event.category || event.tag || '',
                 time: event.time || '',
@@ -40,7 +41,7 @@ export const saveSyncHistory = async (type: SyncType) => {
                 userPay: event.userPay || ''
             }));
 
-            const response = await fetch(`${endpoint.trim()}/insertDataEvent.aspx`, {
+            const response = await fetch(`${endpoint.trim()}/insertDataEvent`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,7 +62,11 @@ export const saveSyncHistory = async (type: SyncType) => {
 
         } else if (type === 'DB_DOWN') {
             // Call API GET và update vào store
-            const response = await fetch(`${endpoint.trim()}/getAllDataEvent.aspx`, {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const year = now.getFullYear();
+            
+            const response = await fetch(`${endpoint.trim()}/getAllDataEvent?month=${month}&year=${year}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -69,7 +74,36 @@ export const saveSyncHistory = async (type: SyncType) => {
             });
 
             if (response.ok) {
-                const eventsData = await response.json();
+                const responseText = await response.text();
+                console.log('API Response:', responseText);
+                
+                let eventsData;
+                try {
+                    eventsData = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    Alert.alert('Lỗi', 'Dữ liệu trả về từ server không đúng định dạng JSON');
+                    return;
+                }
+                
+                console.log('Parsed Events Data:', eventsData);
+                console.log('Events Data Length:', Array.isArray(eventsData) ? eventsData.length : 'Not an array');
+                
+                // Kiểm tra nếu eventsData không phải là array hoặc rỗng
+                if (!Array.isArray(eventsData)) {
+                    Alert.alert('Lỗi', 'Dữ liệu trả về từ server không đúng định dạng (không phải array)');
+                    return;
+                }
+                
+                if (eventsData.length === 0) {
+                    Alert.alert('Thông báo', 'Không có dữ liệu sự kiện nào từ server');
+                    const newItem: SyncHistoryItem = { type, time };
+                    const existing = await AsyncStorage.getItem(SYNC_HISTORY_KEY);
+                    const history: SyncHistoryItem[] = existing ? JSON.parse(existing) : [];
+                    history.unshift(newItem);
+                    await AsyncStorage.setItem(SYNC_HISTORY_KEY, JSON.stringify(history));
+                    return;
+                }
                 
                 // Clear existing events và lưu data mới
                 const keys = await AsyncStorage.getAllKeys();
@@ -79,21 +113,26 @@ export const saveSyncHistory = async (type: SyncType) => {
                 // Nhóm events theo date và lưu vào store
                 const eventsByDate: Record<string, any[]> = {};
                 eventsData.forEach((event: any) => {
+                    console.log('Processing event:', event);
                     const date = event.date;
                     if (!eventsByDate[date]) eventsByDate[date] = [];
                     eventsByDate[date].push({
                         name: event.name,
+                        tag: event.category, // mapping category -> tag
                         amount: event.amount,
-                        category: event.category,
                         time: event.time,
-                        userPay: event.userPay
+                        userPay: event.userPay,
+                        formattedAmount: `${event.amount.toLocaleString()}đ`
                     });
                 });
+
+                console.log('Events by date:', eventsByDate);
 
                 // Lưu từng ngày vào AsyncStorage
                 for (const [date, events] of Object.entries(eventsByDate)) {
                     const key = `event_${date}`;
                     await AsyncStorage.setItem(key, JSON.stringify(events));
+                    console.log(`Saved ${events.length} events for date ${date}`);
                 }
 
                 Alert.alert('Thành công', `Đã đồng bộ ${eventsData.length} sự kiện từ server về máy`);
@@ -103,7 +142,9 @@ export const saveSyncHistory = async (type: SyncType) => {
                 history.unshift(newItem);
                 await AsyncStorage.setItem(SYNC_HISTORY_KEY, JSON.stringify(history));
             } else {
-                Alert.alert('Lỗi', `Không thể tải dữ liệu từ server. Status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                Alert.alert('Lỗi', `Không thể tải dữ liệu từ server. Status: ${response.status}\nResponse: ${errorText}`);
             }
         }
     } catch (error) {

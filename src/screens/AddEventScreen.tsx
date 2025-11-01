@@ -338,7 +338,7 @@ const AddEventScreen: React.FC = () => {
                             history.map((item, index) => (
                                 Array.isArray(item.events) && item.events.map((event) => (
                                     <HistoryItem
-                                        key={`${item.date}-${event.id}-${index}`}
+                                        key={`${event.dateTimePay}`}
                                         eventName={event.tag}
                                         tag={event.tag}
                                         detail={event.detail}
