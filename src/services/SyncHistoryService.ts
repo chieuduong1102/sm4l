@@ -32,7 +32,7 @@ export const saveSyncHistory = async (type: SyncType) => {
             // Lấy data events và call API POST
             const allEvents = await getDataAllEventsFromStore();
             const eventsData = allEvents.map(event => ({
-                name: event.details || '',
+                name: event.name || '',
                 amount: event.amount || 0,
                 category: event.category || event.tag || '',
                 time: event.time || '',

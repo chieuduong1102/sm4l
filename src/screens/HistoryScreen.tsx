@@ -31,8 +31,8 @@ const HistoryScreen: React.FC = () => {
             <HeaderMain currentTitle="Lịch sử chi tiêu" />
             <ScrollView 
                 contentContainerStyle={[styles.content, { 
-                    paddingTop: insets.top + 80,
-                    paddingBottom: insets.bottom + 100 // Thêm padding bottom đủ lớn
+                    paddingTop: insets.top + 100,
+                    paddingBottom: insets.bottom + 40 // Thêm padding bottom đủ lớn
                 }]}
                 showsVerticalScrollIndicator={false}
             >    
@@ -44,11 +44,12 @@ const HistoryScreen: React.FC = () => {
                         <Text style={styles.monthTitle}>Tháng {monthYear.slice(5, 7)}/{monthYear.slice(0, 4)}</Text>
                         {groupedHistory[monthYear].map((event) => (
                             <HistoryItem
-                                key={`${event.date}${event.time}`}                                eventName={event.tag}
+                                key={`${event.dateTimePay}`}
+                                eventName={event.name}
                                 tag={event.tag}
                                 detail={event.detail}
                                 amount={event.formattedAmount}
-                                dateTimePay={event.dateTimePay || event.formattedTime}
+                                dateTimePay={event.dateTimePay || ''}
                                 userPay={event.userPay}
                             />
                         ))}

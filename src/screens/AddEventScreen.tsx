@@ -41,7 +41,7 @@ const AddEventScreen: React.FC = () => {
     const [showEventInput, setShowEventInput] = useState(false);
     const [eventInput, setEventInput] = useState('');
     const [showDetailInput, setShowDetailInput] = useState(false);
-    const [history, setHistory] = useState<{ date: string; events: { id: string, tag: string; amount: number; formattedAmount: string; detail: string; dateTimePay: string; userPay: string }[] }[]>([]);
+    const [history, setHistory] = useState<{ date: string; events: { id: string, tag: string; amount: number; formattedAmount: string; detail: string; dateTimePay: string; userPay: string; name: string }[] }[]>([]);
 
     const scrollViewRef = useRef<ScrollView>(null);
     const eventInputRef = useRef<TextInput>(null);
@@ -160,11 +160,29 @@ const AddEventScreen: React.FC = () => {
         }
 
         const newEvent = {
-            id: Date.now().toString(), // Generate a unique ID
+            id: (() => {
+                const now = new Date();
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            })(), // Format: yyyyMMddHHmmss
+            name: selectedTag.name,
             tag: selectedTag.name,
+            category: selectedTag.name,
             amount: parseInt(amountInput),
             formattedAmount: formatCurrency(amountInput),
             detail: eventInput,
+            time: (() => {
+                const now = new Date();
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            })(), // Format: HHmmss
+            date: selectedDate,
+            formattedTime: (() => {
+                const now = new Date();
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                return `${selectedDate.slice(8, 10)}/${selectedDate.slice(5, 7)}/${selectedDate.slice(0, 4)} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            })(),
+            userPay: '', // Sẽ được set trong saveDataEventDayToStore
         };
 
         try {
@@ -339,7 +357,7 @@ const AddEventScreen: React.FC = () => {
                                 Array.isArray(item.events) && item.events.map((event) => (
                                     <HistoryItem
                                         key={`${event.dateTimePay}`}
-                                        eventName={event.tag}
+                                        eventName={event.name}
                                         tag={event.tag}
                                         detail={event.detail}
                                         amount={event.formattedAmount}
