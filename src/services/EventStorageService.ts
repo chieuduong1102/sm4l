@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const saveDataEventDayToStore = async (date: string, event: any) => {
     try {
         const currentTime = new Date();
-        const time = currentTime.toTimeString().slice(0, 5).replace(':', ''); // hhmm
+        const time = currentTime.toTimeString().slice(0, 8).replace(/:/g, ''); // hhmmss
         const key = `event_${date}`;
 
         const existingData = await AsyncStorage.getItem(key);
@@ -37,7 +37,7 @@ export const getDataEventsDayFromStore = async (date: string) => {
 
         // Format date and time for each event
         const formattedEvents = events.map((event: any) => {
-            const dateTimePay = `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}`;
+            const dateTimePay = `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}:${event.time.slice(4, 6) || '00'}`;
             return { ...event, dateTimePay };
         });
 
@@ -61,7 +61,7 @@ export const getDataEventsMonthFromStore = async (date: string) => {
             return parsedEvents.map((event: any) => ({
                 ...event,
                 date: eventDate,
-                formattedTime: `${eventDate.slice(8, 10)}/${eventDate.slice(5, 7)}/${eventDate.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}`,
+                formattedTime: `${eventDate.slice(8, 10)}/${eventDate.slice(5, 7)}/${eventDate.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}:${event.time.slice(4, 6) || '00'}`,
             }));
         });
         // Sắp xếp giảm dần theo formattedTime
@@ -85,7 +85,7 @@ export const getDataAllEventsFromStore = async () => {
             return parsedEvents.map((event: any) => ({
                 ...event,
                 date,
-                formattedTime: `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}`,
+                formattedTime: `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)} ${event.time.slice(0, 2)}:${event.time.slice(2, 4)}:${event.time.slice(4, 6) || '00'}`,
             }));
         });
         // Sắp xếp giảm dần theo formattedTime (mới nhất trước)
@@ -104,7 +104,7 @@ export const getDataAllEventsFromStore = async () => {
 //     category: 'Giải trí',
 //     time: '0900',
 //     date: '2025-10-30',
-//     formattedTime: '30/10/2025 09:00'
+//     formattedTime: '30/10/2025 09:00:00'
 //     userPay: 'Duong'
 //   },
 //   {
@@ -113,7 +113,7 @@ export const getDataAllEventsFromStore = async () => {
 //     category: 'Ăn uống',
 //     time: '0730',
 //     date: '2025-10-30',
-//     formattedTime: '30/10/2025 07:30'
+//     formattedTime: '30/10/2025 07:30:00'
 //     userPay: 'Duong'
 //   }
 // ]

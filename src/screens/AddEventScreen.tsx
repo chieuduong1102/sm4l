@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -42,6 +42,10 @@ const AddEventScreen: React.FC = () => {
     const [eventInput, setEventInput] = useState('');
     const [showDetailInput, setShowDetailInput] = useState(false);
     const [history, setHistory] = useState<{ date: string; events: { id: string, tag: string; amount: number; formattedAmount: string; detail: string; dateTimePay: string; userPay: string }[] }[]>([]);
+
+    const scrollViewRef = useRef<ScrollView>(null);
+    const eventInputRef = useRef<TextInput>(null);
+    const detailInputRef = useRef<TextInput>(null);
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -113,6 +117,7 @@ const AddEventScreen: React.FC = () => {
         const numericText = text.replace(/[^\d]/g, '');
         setAmountInput(numericText);
     };
+
     const handleTagPress = (tag: ExpenseTag) => {
         if (tag.id === '8') {
             setShowEventInput(true);
@@ -129,6 +134,18 @@ const AddEventScreen: React.FC = () => {
     const handleEventInputChange = (text: string) => {
         setEventInput(text);
         setSelectedTag({ id: '8', name: text, icon: 'plus', color: '#6b7280' });
+    };
+
+    const handleEventInputFocus = () => {
+        setTimeout(() => {
+            scrollViewRef.current?.scrollTo({ y: 300, animated: true });
+        }, 100);
+    };
+
+    const handleDetailInputFocus = () => {
+        setTimeout(() => {
+            scrollViewRef.current?.scrollTo({ y: 400, animated: true });
+        }, 100);
     };
 
     const handleSave = async () => {
@@ -204,7 +221,11 @@ const AddEventScreen: React.FC = () => {
                     onBackPress={() => navigation.goBack()}
                 />
 
-                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                    ref={scrollViewRef}
+                    style={styles.content} 
+                    showsVerticalScrollIndicator={false}
+                >
                     <View style={styles.dateSection}>
                         <Text style={styles.dateLabel}>Ngày chi tiêu:</Text>
                         <Text style={styles.dateValue}>{formatDate(selectedDate)}</Text>
@@ -245,9 +266,11 @@ const AddEventScreen: React.FC = () => {
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Nhập sự kiện</Text>
                             <TextInput
+                                ref={eventInputRef}
                                 style={styles.otherEventInput}
                                 value={eventInput}
                                 onChangeText={handleEventInputChange}
+                                onFocus={handleEventInputFocus}
                                 placeholder="Nhập sự kiện"
                             />
                         </View>
@@ -256,9 +279,11 @@ const AddEventScreen: React.FC = () => {
                     {showDetailInput && (
                         <View style={styles.section}>
                             <TextInput
+                                ref={detailInputRef}
                                 style={styles.otherEventInput}
                                 value={eventInput}
                                 onChangeText={setEventInput}
+                                onFocus={handleDetailInputFocus}
                                 placeholder="Mô tả chi tiết (tùy chọn)"
                             />
                         </View>

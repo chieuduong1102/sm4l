@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDataAllEventsFromStore } from './EventStorageService';
+import { Alert } from 'react-native';
 
 export type SyncType = 'DB_UP' | 'DB_DOWN';
 
@@ -13,18 +15,100 @@ const WALLET_HISTORY_PREFIX = 'wallet_history_';
 const WALLET_SYNC_KEY = 'wallet_sync_data';
 
 export const saveSyncHistory = async (type: SyncType) => {
-    //use data in AsyncStorage -> call API
     const now = new Date();
     const pad = (n: number) => n.toString().padStart(2, '0');
     const time = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    const newItem: SyncHistoryItem = { type, time };
+    
     try {
-        const existing = await AsyncStorage.getItem(SYNC_HISTORY_KEY);
-        const history: SyncHistoryItem[] = existing ? JSON.parse(existing) : [];
-        history.unshift(newItem); // newest first
-        await AsyncStorage.setItem(SYNC_HISTORY_KEY, JSON.stringify(history));
-    } catch (e) {
-        console.error('Error saving sync history', e);
+        // Lấy endpoint từ store
+        const endpoint = await AsyncStorage.getItem('sync_endpoint');
+        if (!endpoint || !endpoint.trim()) {
+            Alert.alert('Lỗi', 'Chưa cấu hình endpoint đồng bộ');
+            return;
+        }
+
+        if (type === 'DB_UP') {
+            // Lấy data events và call API POST
+            const allEvents = await getDataAllEventsFromStore();
+            const eventsData = allEvents.map(event => ({
+                name: event.name || event.eventName || '',
+                amount: event.amount || 0,
+                category: event.category || event.tag || '',
+                time: event.time || '',
+                date: event.date || '',
+                formattedTime: event.formattedTime || '',
+                userPay: event.userPay || ''
+            }));
+
+            const response = await fetch(`${endpoint.trim()}/insertDataEvent.aspx`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventsData)
+            });
+
+            if (response.ok) {
+                Alert.alert('Thành công', 'Đã đồng bộ dữ liệu lên server thành công');
+                const newItem: SyncHistoryItem = { type, time };
+                const existing = await AsyncStorage.getItem(SYNC_HISTORY_KEY);
+                const history: SyncHistoryItem[] = existing ? JSON.parse(existing) : [];
+                history.unshift(newItem);
+                await AsyncStorage.setItem(SYNC_HISTORY_KEY, JSON.stringify(history));
+            } else {
+                Alert.alert('Lỗi', `Không thể đồng bộ lên server. Status: ${response.status}`);
+            }
+
+        } else if (type === 'DB_DOWN') {
+            // Call API GET và update vào store
+            const response = await fetch(`${endpoint.trim()}/getAllDataEvent.aspx`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const eventsData = await response.json();
+                
+                // Clear existing events và lưu data mới
+                const keys = await AsyncStorage.getAllKeys();
+                const eventKeys = keys.filter(key => key.startsWith('event_'));
+                await AsyncStorage.multiRemove(eventKeys);
+
+                // Nhóm events theo date và lưu vào store
+                const eventsByDate: Record<string, any[]> = {};
+                eventsData.forEach((event: any) => {
+                    const date = event.date;
+                    if (!eventsByDate[date]) eventsByDate[date] = [];
+                    eventsByDate[date].push({
+                        name: event.name,
+                        amount: event.amount,
+                        category: event.category,
+                        time: event.time,
+                        userPay: event.userPay
+                    });
+                });
+
+                // Lưu từng ngày vào AsyncStorage
+                for (const [date, events] of Object.entries(eventsByDate)) {
+                    const key = `event_${date}`;
+                    await AsyncStorage.setItem(key, JSON.stringify(events));
+                }
+
+                Alert.alert('Thành công', `Đã đồng bộ ${eventsData.length} sự kiện từ server về máy`);
+                const newItem: SyncHistoryItem = { type, time };
+                const existing = await AsyncStorage.getItem(SYNC_HISTORY_KEY);
+                const history: SyncHistoryItem[] = existing ? JSON.parse(existing) : [];
+                history.unshift(newItem);
+                await AsyncStorage.setItem(SYNC_HISTORY_KEY, JSON.stringify(history));
+            } else {
+                Alert.alert('Lỗi', `Không thể tải dữ liệu từ server. Status: ${response.status}`);
+            }
+        }
+    } catch (error) {
+        console.error('Error in saveSyncHistory:', error);
+        Alert.alert('Lỗi', `Lỗi kết nối: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 };
 
