@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HeaderMain from '../components/HeaderMain';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -17,6 +17,8 @@ const SettingScreen: React.FC = () => {
     const [syncHistory, setSyncHistory] = useState<SyncHistoryItem[]>([]);
     const [showSyncSetting, setShowSyncSetting] = useState(false);
     const [endpoint, setEndpoint] = useState('');
+    const [clickCount, setClickCount] = useState(0);
+    const [showResetModal, setShowResetModal] = useState(false);
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -49,7 +51,31 @@ const SettingScreen: React.FC = () => {
 
     const handleSaveEndpoint = async () => {
         await AsyncStorage.setItem('sync_endpoint', endpoint.trim());
-        Alert('Đã lưu endpoint!');
+        Alert.alert('Thành công', 'Đã lưu endpoint!');
+    };
+
+    const handleTitleClick = () => {
+        const newCount = clickCount + 1;
+        setClickCount(newCount);
+        if (newCount >= 5) {
+            setShowResetModal(true);
+            setClickCount(0);
+        }
+        // Reset count sau 3 giây nếu không đủ 5 lần
+        setTimeout(() => setClickCount(0), 3000);
+    };
+
+    const handleResetData = async () => {
+        try {
+            const keys = await AsyncStorage.getAllKeys();
+            await AsyncStorage.multiRemove(keys);
+            setShowResetModal(false);
+            Alert.alert('Thành công', 'Đã xoá toàn bộ dữ liệu!', [
+                { text: 'OK', onPress: () => navigation.navigate(Routes.START_SCREEN as never) }
+            ]);
+        } catch (error) {
+            Alert.alert('Lỗi', 'Không thể xoá dữ liệu');
+        }
     };
 
     return (
@@ -76,7 +102,9 @@ const SettingScreen: React.FC = () => {
                     </View>
                 )}
                 <View style={[styles.section]}> 
-                    <Text style={styles.sectionTitle}>Đồng bộ dữ liệu lên Database</Text>
+                    <TouchableOpacity onPress={handleTitleClick}>
+                        <Text style={styles.sectionTitle}>Đồng bộ dữ liệu lên Database</Text>
+                    </TouchableOpacity>
                     <Text style={styles.sectionDesc}>
                         Tính năng này sẽ đồng bộ toàn bộ dữ liệu chi tiêu hiện tại trên máy của bạn lên Database.
                     </Text>
@@ -124,6 +152,34 @@ const SettingScreen: React.FC = () => {
                     ))}
                 </View>
             </ScrollView>
+            {/* Modal Reset Data */}
+            <Modal
+                visible={showResetModal}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowResetModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>⚠️ Cảnh báo</Text>
+                        <Text style={styles.modalMessage}>Bạn có chắc chắn muốn xoá toàn bộ dữ liệu trong máy không?</Text>
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity 
+                                style={[styles.modalButton, styles.cancelButton]} 
+                                onPress={() => setShowResetModal(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>Huỷ</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.modalButton, styles.confirmButton]} 
+                                onPress={handleResetData}
+                            >
+                                <Text style={styles.confirmButtonText}>Xác nhận</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -264,10 +320,62 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 24,
+        width: '85%',
+        maxWidth: 320,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#ef4444',
+        marginBottom: 16,
+    },
+    modalMessage: {
+        fontSize: 16,
+        color: '#1a365d',
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 22,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginHorizontal: 8,
+    },
+    cancelButton: {
+        backgroundColor: '#64748b',
+    },
+    confirmButton: {
+        backgroundColor: '#ef4444',
+    },
+    cancelButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    confirmButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
 });
 
 export default SettingScreen;
-function Alert(arg0: string) {
-    throw new Error('Function not implemented.');
-}
 
