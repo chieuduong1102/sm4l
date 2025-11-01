@@ -29,7 +29,7 @@ const HistoryScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <HeaderMain currentTitle="Lịch sử chi tiêu" />
-            <ScrollView contentContainerStyle={[styles.content, { marginTop: insets.top + 80 }]}>
+            <ScrollView contentContainerStyle={[styles.content, { marginTop: insets.top + 80, paddingBottom: insets.bottom + 20 }]}>    
                 {Object.keys(groupedHistory).length === 0 && (
                     <Text style={{ color: '#64748b', textAlign: 'center', marginTop: 32 }}>Chưa có lịch sử chi tiêu</Text>
                 )}

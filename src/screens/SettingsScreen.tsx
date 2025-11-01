@@ -38,12 +38,12 @@ const SettingScreen: React.FC = () => {
 
     const handleSyncUp = async () => {
         await saveSyncHistory('DB_UP');
-        await syncWalletUp();
+        // await syncWalletUp();
         fetchHistory();
     };
     const handleSyncDown = async () => {
         await saveSyncHistory('DB_DOWN');
-        await syncWalletDown();
+        // await syncWalletDown();
         fetchHistory();
     };
 
