@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
+import { LineChart, PieChart } from 'react-native-chart-kit';
 import { getDataEventsMonthFromStore } from '../services/EventStorageService';
 import HeaderMain from '../components/HeaderMain';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,6 +25,7 @@ const StatisticsScreen: React.FC = () => {
     const [walletMonthLabels, setWalletMonthLabels] = useState<string[]>([]);
     const [walletMonthAdded, setWalletMonthAdded] = useState<number[]>([]);
     const [walletMonthSpent, setWalletMonthSpent] = useState<number[]>([]);
+    const [pieData, setPieData] = useState<any[]>([]);
 
     useEffect(() => {
         // Lấy danh sách các tháng có dữ liệu trong store
@@ -47,7 +48,7 @@ const StatisticsScreen: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             const events = await getDataEventsMonthFromStore(selectedMonth);
-            // Gom nhóm theo ngày trong tháng
+            // Gom nhóm theo ngày trong tháng cho line chart
             const days: Record<string, number> = {};
             events.forEach(e => {
                 const day = e.date.slice(8, 10);
@@ -66,6 +67,73 @@ const StatisticsScreen: React.FC = () => {
             });
             setLabels(chartLabels);
             setData(chartData);
+
+            // Tạo data cho pie chart theo category
+            const expenseTags = [
+                { name: 'Ăn uống', color: '#ef4444' },
+                { name: 'Xăng xe', color: '#f97316' },
+                { name: 'Mua sắm', color: '#eab308' },
+                { name: 'Giải trí', color: '#22c55e' },
+                { name: 'Y tế', color: '#06b6d4' },
+                { name: 'Học tập', color: '#3b82f6' },
+                { name: 'Nhà cửa', color: '#8b5cf6' },
+            ];
+            
+            const categoryAmounts: Record<string, number> = {};
+            let othersAmount = 0;
+            
+            events.forEach(e => {
+                const amount = parseInt(e.amount || e.formattedAmount || '0', 10);
+                const tag = e.tag || e.category || '';
+                const foundTag = expenseTags.find(t => t.name === tag);
+                
+                if (foundTag) {
+                    categoryAmounts[tag] = (categoryAmounts[tag] || 0) + amount;
+                } else {
+                    othersAmount += amount;
+                }
+            });
+
+            // Tạo pie chart data
+            const totalAmount = Object.values(categoryAmounts).reduce((sum, amount) => sum + amount, othersAmount);
+            const pieChartData: any[] = [];
+
+            // Format số tiền cho pie chart
+            const formatMoneyForPie = (amount: number) => {
+                if (amount >= 1_000_000) return (amount / 1_000_000).toFixed(2) + 'tr';
+                if (amount >= 1_000) return (amount / 1_000).toFixed(2) + 'k';
+                return amount.toString();
+            };
+
+            // Thêm các category có trong expenseTags
+            expenseTags.forEach(tag => {
+                if (categoryAmounts[tag.name] > 0) {
+                    const percentage = ((categoryAmounts[tag.name] / totalAmount) * 100);
+                    pieChartData.push({
+                        name: `${tag.name} (${formatMoneyForPie(categoryAmounts[tag.name])})`,
+                        population: categoryAmounts[tag.name],
+                        color: tag.color,
+                        legendFontColor: '#64748b',
+                        legendFontSize: 11,
+                        percentage: percentage.toFixed(1) + '%'
+                    });
+                }
+            });
+
+            // Thêm Others nếu có
+            if (othersAmount > 0) {
+                const percentage = ((othersAmount / totalAmount) * 100);
+                pieChartData.push({
+                    name: `Khác (${formatMoneyForPie(othersAmount)})`,
+                    population: othersAmount,
+                    color: '#6b7280',
+                    legendFontColor: '#64748b',
+                    legendFontSize: 11,
+                    percentage: percentage.toFixed(1) + '%'
+                });
+            }
+
+            setPieData(pieChartData);
         };
         fetchData();
     }, [selectedMonth]);
@@ -194,46 +262,44 @@ const StatisticsScreen: React.FC = () => {
                         </RNScrollView>
                     </View>
                     <View style={styles.chartContainer}>
-                        <Text style={styles.chartTitle}>Biểu đồ ví tháng này</Text>
-                        <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            {/* {walletMonthLabels.length > 0 ? (
-                                <LineChart
-                                    data={{
-                                        labels: walletMonthLabels.map(day => String(Number(day))),
-                                        datasets: [
-                                            { data: walletMonthAdded, color: () => '#2563eb', strokeWidth: 2, withDots: true },
-                                            { data: walletMonthSpent, color: () => '#ef4444', strokeWidth: 2, withDots: true },
-                                        ],
-                                        legend: ['Nạp vào', 'Đã dùng'],
-                                    }}
-                                    width={Math.max((walletMonthLabels.length || 1) * 40, width - 32)}
-                                    height={260}
-                                    yAxisSuffix=""
-                                    yLabelsOffset={8}
+                        <Text style={styles.chartTitle}>Biểu đồ chi tiêu tháng này theo category</Text>
+                        {pieData.length > 0 ? (
+                            <View style={styles.pieChartWrapper}>
+                                <PieChart
+                                    data={pieData}
+                                    width={width - 32}
+                                    height={200}
                                     chartConfig={{
                                         backgroundColor: '#fff',
                                         backgroundGradientFrom: '#fff',
                                         backgroundGradientTo: '#fff',
-                                        decimalPlaces: 0,
                                         color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                                        labelColor: () => '#64748b',
-                                        style: { borderRadius: 4 },
-                                        propsForDots: {
-                                            r: '4',
-                                            strokeWidth: '2',
-                                            stroke: '#2563eb',
-                                        },
-                                        formatYLabel: formatMoney,
                                     }}
-                                    bezier
-                                    style={{ borderRadius: 4 }}
-                                    formatYLabel={formatMoney}
+                                    accessor="population"
+                                    backgroundColor="transparent"
+                                    paddingLeft="80"
+                                    center={[10, 0]}
+                                    absolute
+                                    hasLegend={false}
                                 />
-                            ) : (
-                                <Text style={styles.noData}>Không có dữ liệu ví tháng này.</Text>
-                            )} */}
-                            <Text style={styles.noData}>Coming soon...</Text>
-                        </RNScrollView>
+                                {/* Custom Legend - 2 category mỗi hàng */}
+                                <View style={styles.customLegend}>
+                                    {Array.from({ length: Math.ceil(pieData.length / 2) }).map((_, rowIndex) => (
+                                        <View key={rowIndex} style={styles.legendRow}>
+                                            {pieData.slice(rowIndex * 2, (rowIndex + 1) * 2).map((item, index) => (
+                                                <View key={index} style={styles.legendItem}>
+                                                    <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                                                    <Text style={styles.legendText}>{item.name}</Text>
+                                                    <Text style={styles.legendPercentage}>{item.percentage}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+                        ) : (
+                            <Text style={styles.noData}>Không có dữ liệu chi tiêu theo category.</Text>
+                        )}
                     </View>
                 </View>
             </ScrollView >
@@ -303,6 +369,43 @@ const styles = StyleSheet.create({
         color: '#1a365d',
         marginBottom: 8,
         textAlign: 'center',
+    },
+    pieChartWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+    },
+    customLegend: {
+        marginTop: 16,
+        width: '100%',
+    },
+    legendRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 8,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        justifyContent: 'center',
+    },
+    legendColor: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        marginRight: 6,
+    },
+    legendText: {
+        fontSize: 11,
+        color: '#64748b',
+        marginRight: 4,
+        fontWeight: '500',
+    },
+    legendPercentage: {
+        fontSize: 11,
+        color: '#1a365d',
+        fontWeight: 'bold',
     },
 });
 
