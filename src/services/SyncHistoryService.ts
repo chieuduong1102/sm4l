@@ -38,7 +38,8 @@ export const saveSyncHistory = async (type: SyncType) => {
                 time: event.time || '',
                 date: event.date || '',
                 formattedTime: event.formattedTime || '',
-                userPay: event.userPay || ''
+                userPay: event.userPay || '',
+                detail: event.detail || ''
             }));
 
             const url = `${endpoint.trim()}/insertDataEvent`;
@@ -133,6 +134,7 @@ export const saveSyncHistory = async (type: SyncType) => {
                         amount: event.amount,
                         time: event.time,
                         userPay: event.userPay,
+                        detail: event.detail || '', // thêm detail từ API response
                         formattedAmount: `${event.amount.toLocaleString()}đ`
                     });
                 });

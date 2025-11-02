@@ -8,17 +8,24 @@ import { getDataAllEventsFromStore } from '../services/EventStorageService';
 import packageJson from '../../package.json';
 
 const HistoryScreen: React.FC = () => {
-    const [groupedHistory, setGroupedHistory] = useState<Record<string, any[]>>({});
+    const [groupedHistory, setGroupedHistory] = useState<Record<string, Record<string, any[]>>>({});
     const insets = useSafeAreaInsets();
     useEffect(() => {
         const fetchHistory = async () => {
             const allEvents = await getDataAllEventsFromStore();
-            const groupedByMonth = allEvents.reduce((acc: Record<string, any[]>, event) => {
+            // Nhóm theo tháng, sau đó theo ngày
+            const groupedByMonth = allEvents.reduce((acc: Record<string, Record<string, any[]>>, event) => {
                 const monthYear = event.date.slice(0, 7); // yyyy-MM
+                const fullDate = event.date; // yyyy-MM-dd
+                const dayDate = `${event.date.slice(8, 10)}/${event.date.slice(5, 7)}/${event.date.slice(0, 4)}`; // dd/MM/yyyy
+                
                 if (!acc[monthYear]) {
-                    acc[monthYear] = [];
+                    acc[monthYear] = {};
                 }
-                acc[monthYear].push(event);
+                if (!acc[monthYear][dayDate]) {
+                    acc[monthYear][dayDate] = [];
+                }
+                acc[monthYear][dayDate].push(event);
                 return acc;
             }, {});
             setGroupedHistory(groupedByMonth);
@@ -42,16 +49,21 @@ const HistoryScreen: React.FC = () => {
                 {Object.keys(groupedHistory).map((monthYear) => (
                     <View key={monthYear} style={styles.monthSection}>
                         <Text style={styles.monthTitle}>Tháng {monthYear.slice(5, 7)}/{monthYear.slice(0, 4)}</Text>
-                        {groupedHistory[monthYear].map((event) => (
-                            <HistoryItem
-                                key={`${event.dateTimePay}`}
-                                eventName={event.name}
-                                tag={event.tag}
-                                detail={event.detail}
-                                amount={event.formattedAmount}
-                                dateTimePay={event.dateTimePay || ''}
-                                userPay={event.userPay}
-                            />
+                        {Object.keys(groupedHistory[monthYear]).map((dayDate) => (
+                            <View key={dayDate} style={styles.daySection}>
+                                <Text style={styles.dayTitle}>{dayDate}</Text>
+                                {groupedHistory[monthYear][dayDate].map((event) => (
+                                    <HistoryItem
+                                        key={`${event.date}${event.time}`}
+                                        eventName={event.tag}
+                                        tag={event.tag}
+                                        detail={event.detail}
+                                        amount={event.formattedAmount}
+                                        dateTimePay={event.dateTimePay || event.formattedTime}
+                                        userPay={event.userPay}
+                                    />
+                                ))}
+                            </View>
                         ))}
                     </View>
                 ))}
@@ -79,6 +91,17 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#1a365d',
         marginBottom: 12,
+    },
+    daySection: {
+        marginBottom: 16,
+        paddingLeft: 8,
+    },
+    dayTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#64748b',
+        marginBottom: 8,
+        paddingLeft: 8,
     },
 });
 
