@@ -98,6 +98,38 @@ export const getDataAllEventsFromStore = async () => {
     }
 };
 
+export const updateEventInStore = async (originalEvent: any, updatedEvent: any) => {
+    try {
+        const key = `event_${originalEvent.date}`;
+        const existingData = await AsyncStorage.getItem(key);
+        const parsedData = existingData ? JSON.parse(existingData) : [];
+
+        // Find and update the event by matching date and time
+        const eventIndex = parsedData.findIndex((event: any) => 
+            event.time === originalEvent.time
+        );
+
+        if (eventIndex !== -1) {
+            // Update the event while keeping the original time and userPay
+            parsedData[eventIndex] = {
+                ...updatedEvent,
+                time: originalEvent.time,
+                userPay: originalEvent.userPay
+            };
+
+            await AsyncStorage.setItem(key, JSON.stringify(parsedData));
+            console.log('Event updated successfully:', parsedData[eventIndex]);
+            return true;
+        } else {
+            console.error('Event not found for update');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error updating event:', error);
+        return false;
+    }
+};
+
 // [
 //   {
 //     name: 'Cafe',

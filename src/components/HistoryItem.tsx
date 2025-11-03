@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface HistoryItemProps {
@@ -9,17 +9,63 @@ interface HistoryItemProps {
     amount: string;
     dateTimePay: string;
     userPay: string;
+    onEditPress?: (event: any) => void;
+    eventData?: any;
 }
 
-const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amount, dateTimePay, userPay }) => {
+const HistoryItem: React.FC<HistoryItemProps> = ({ 
+    eventName, 
+    tag, 
+    detail, 
+    amount, 
+    dateTimePay, 
+    userPay, 
+    onEditPress,
+    eventData 
+}) => {
     const [profileName, setProfileName] = useState<string | null>(null);
+    const [clickCount, setClickCount] = useState(0);
+    const [clickTimeout, setClickTimeout] = useState<number | null>(null);
 
     useEffect(() => {
         AsyncStorage.getItem('profile_name').then(setProfileName);
     }, []);
 
+    const handlePress = () => {
+        // Clear existing timeout
+        if (clickTimeout) {
+            clearTimeout(clickTimeout);
+        }
+
+        const newClickCount = clickCount + 1;
+        setClickCount(newClickCount);
+
+        if (newClickCount === 5) {
+            // Reset click count and trigger edit
+            setClickCount(0);
+            if (onEditPress && eventData) {
+                onEditPress(eventData);
+            }
+        } else {
+            // Set timeout to reset click count after 2 seconds
+            const timeout = setTimeout(() => {
+                setClickCount(0);
+            }, 2000);
+            setClickTimeout(timeout as any);
+        }
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (clickTimeout) {
+                clearTimeout(clickTimeout);
+            }
+        };
+    }, [clickTimeout]);
+
     return (
-        <View style={styles.container}>
+        <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
             <View style={styles.textContainer}>
                 <Text style={styles.eventName}>{eventName}</Text>
                 <Text style={styles.tag}>{tag}</Text>
@@ -30,7 +76,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ eventName, tag, detail, amoun
                 )}
             </View>
             <Text style={styles.amount}>- {amount}</Text>
-        </View>
+        </TouchableOpacity>
     );
 };
 
@@ -87,6 +133,12 @@ const styles = StyleSheet.create({
     byNameValue: {
         color: '#2563eb',
         fontWeight: 'bold',
+    },
+    clickCounter: {
+        fontSize: 10,
+        color: '#f59e0b',
+        fontWeight: 'bold',
+        marginTop: 2,
     },
 });
 

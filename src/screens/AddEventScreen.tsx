@@ -60,7 +60,7 @@ const AddEventScreen: React.FC = () => {
 
     const expenseTags: ExpenseTag[] = [
         { id: '1', name: 'Ăn uống', icon: 'utensils', color: '#ef4444' },
-        { id: '2', name: 'Xăng xe', icon: 'gas-pump', color: '#f97316' },
+        { id: '2', name: 'Đi lại', icon: 'car-side', color: '#f97316' },
         { id: '3', name: 'Mua sắm', icon: 'shopping-bag', color: '#eab308' },
         { id: '4', name: 'Giải trí', icon: 'gamepad', color: '#22c55e' },
         { id: '5', name: 'Y tế', icon: 'heart-pulse', color: '#06b6d4' },

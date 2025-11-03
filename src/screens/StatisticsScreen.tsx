@@ -71,7 +71,7 @@ const StatisticsScreen: React.FC = () => {
             // Tạo data cho pie chart theo category
             const expenseTags = [
                 { name: 'Ăn uống', color: '#ef4444' },
-                { name: 'Xăng xe', color: '#f97316' },
+                { name: 'Đi lại', color: '#f97316' },
                 { name: 'Mua sắm', color: '#eab308' },
                 { name: 'Giải trí', color: '#22c55e' },
                 { name: 'Y tế', color: '#06b6d4' },
