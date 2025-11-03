@@ -58,9 +58,20 @@ const HistoryScreen: React.FC = () => {
         let filteredEvents = allEvents;
         
         if (selectedFilter !== 'Tất cả') {
-            filteredEvents = allEvents.filter(event => 
-                event.tag === selectedFilter || event.category === selectedFilter || event.name === selectedFilter
-            );
+            if (selectedFilter === 'Khác') {
+                // Filter to show only expenses that don't belong to the main 7 categories
+                const mainCategories = ['Ăn uống', 'Đi lại', 'Mua sắm', 'Giải trí', 'Y tế', 'Học tập', 'Nhà cửa'];
+                filteredEvents = allEvents.filter(event => 
+                    !mainCategories.includes(event.tag) && 
+                    !mainCategories.includes(event.category) && 
+                    !mainCategories.includes(event.name)
+                );
+            } else {
+                // Filter for specific category
+                filteredEvents = allEvents.filter(event => 
+                    event.tag === selectedFilter || event.category === selectedFilter || event.name === selectedFilter
+                );
+            }
         }
 
         // Nhóm theo tháng, sau đó theo ngày
