@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Modal, TextInput, TouchableOpacity, Alert, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Modal, TextInput, TouchableOpacity, Alert, FlatList, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -168,7 +168,7 @@ const HistoryScreen: React.FC = () => {
 
             <ScrollView 
                 contentContainerStyle={[styles.content, { 
-                    paddingTop: 16,
+                    paddingTop: 20,
                     paddingBottom: insets.bottom + 40 // Thêm padding bottom đủ lớn
                 }]}
                 showsVerticalScrollIndicator={false}
@@ -210,63 +210,65 @@ const HistoryScreen: React.FC = () => {
                 visible={modalVisible}
                 onRequestClose={closeModal}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Chỉnh sửa chi tiêu</Text>
-                        
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Tên chi tiêu:</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                value={editForm.name}
-                                onChangeText={(text) => setEditForm({...editForm, name: text})}
-                                placeholder="Nhập tên chi tiêu"
-                            />
-                        </View>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Chỉnh sửa chi tiêu</Text>
+                            
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Tên chi tiêu:</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    value={editForm.name}
+                                    onChangeText={(text) => setEditForm({...editForm, name: text})}
+                                    placeholder="Nhập tên chi tiêu"
+                                />
+                            </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Số tiền:</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                value={editForm.amount}
-                                onChangeText={(text) => setEditForm({...editForm, amount: text})}
-                                placeholder="Nhập số tiền"
-                                keyboardType="numeric"
-                            />
-                        </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Số tiền:</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    value={editForm.amount}
+                                    onChangeText={(text) => setEditForm({...editForm, amount: text})}
+                                    placeholder="Nhập số tiền"
+                                    keyboardType="numeric"
+                                />
+                            </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Danh mục:</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                value={editForm.category}
-                                onChangeText={(text) => setEditForm({...editForm, category: text})}
-                                placeholder="Nhập danh mục"
-                            />
-                        </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Danh mục:</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    value={editForm.category}
+                                    onChangeText={(text) => setEditForm({...editForm, category: text})}
+                                    placeholder="Nhập danh mục"
+                                />
+                            </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Ghi chú:</Text>
-                            <TextInput
-                                style={[styles.textInput, styles.textArea]}
-                                value={editForm.detail}
-                                onChangeText={(text) => setEditForm({...editForm, detail: text})}
-                                placeholder="Nhập ghi chú"
-                                multiline={true}
-                                numberOfLines={3}
-                            />
-                        </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Ghi chú:</Text>
+                                <TextInput
+                                    style={[styles.textInput, styles.textArea]}
+                                    value={editForm.detail}
+                                    onChangeText={(text) => setEditForm({...editForm, detail: text})}
+                                    placeholder="Nhập ghi chú"
+                                    multiline={true}
+                                    numberOfLines={3}
+                                />
+                            </View>
 
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={closeModal}>
-                                <Text style={styles.cancelButtonText}>Hủy</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.modalButton, styles.saveButton]} onPress={handleSaveEdit}>
-                                <Text style={styles.saveButtonText}>Lưu</Text>
-                            </TouchableOpacity>
+                            <View style={styles.modalButtons}>
+                                <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={closeModal}>
+                                    <Text style={styles.cancelButtonText}>Hủy</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.modalButton, styles.saveButton]} onPress={handleSaveEdit}>
+                                    <Text style={styles.saveButtonText}>Lưu</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
-                </View>
+                </TouchableWithoutFeedback>
             </Modal>
         </View>
     );
@@ -363,7 +365,7 @@ const styles = StyleSheet.create({
         borderColor: '#d1d5db',
     },
     saveButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: '#1a365d',
     },
     cancelButtonText: {
         color: '#374151',
