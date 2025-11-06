@@ -148,10 +148,11 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ selectedMonth, pieData, totalSp
                     <View style={styles.headerText}>
                         <Text style={styles.botName}>AI Assistant</Text>
                         <Text style={styles.greeting}>
-                            {isCollapsed 
+                            {/* {isCollapsed 
                                 ? "Nhấn để mở rộng phân tích AI..." 
                                 : "Xin chào! Tôi có thể giúp bạn phân tích chi tiêu và đưa ra lời khuyên tối ưu hóa tài chính."
-                            }
+                            } */}
+                            Comming soon ...
                         </Text>
                     </View>
                 </View>
@@ -160,7 +161,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ selectedMonth, pieData, totalSp
                 </Text>
             </TouchableOpacity>
 
-            {!isCollapsed && (
+            {/* {!isCollapsed && (
                 <>
                     {!isAnalyzing && !showAnalysis && (
                         <TouchableOpacity style={styles.analyzeButton} onPress={startAnalysis}>
@@ -198,7 +199,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ selectedMonth, pieData, totalSp
                         </View>
                     )}
                 </>
-            )}
+            )} */}
         </View>
     );
 };
