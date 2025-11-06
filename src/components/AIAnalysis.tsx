@@ -157,7 +157,7 @@ const AIAnalysis: React.FC<AIAnalysisProps> = ({ selectedMonth, pieData, totalSp
                     </View>
                 </View>
                 <Text style={styles.collapseIcon}>
-                    {isCollapsed ? '▼' : '▲'}
+                    {isCollapsed ? '+' : '-'}
                 </Text>
             </TouchableOpacity>
 
