@@ -35,4 +35,8 @@
 
     npm i
     npm run android
-    npm run ios
+        npm run android --configuration Release
+
+
+    npm run ios 
+        npx react-native run-ios --mode Release
