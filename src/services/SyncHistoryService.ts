@@ -135,7 +135,7 @@ export const saveSyncHistory = async (type: SyncType) => {
                         time: event.time,
                         userPay: event.userPay,
                         detail: event.detail || '', // thêm detail từ API response
-                        formattedAmount: `${event.amount.toLocaleString()}đ`
+                        formattedAmount: `${event.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}đ`
                     });
                 });
 

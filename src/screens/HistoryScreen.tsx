@@ -54,6 +54,21 @@ const HistoryScreen: React.FC = () => {
         setAllEvents(events);
     };
 
+    // Format number input for display (add dots)
+    const formatNumberInput = (value: string) => {
+        // Remove all non-digits
+        const numericValue = value.replace(/[^\d]/g, '');
+        if (!numericValue) return '';
+        
+        // Add dots every 3 digits from right
+        return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    };
+
+    // Parse formatted input back to plain number
+    const parseFormattedInput = (value: string) => {
+        return value.replace(/\./g, '');
+    };
+    
     const applyFilter = () => {
         let filteredEvents = allEvents;
         
@@ -100,7 +115,7 @@ const HistoryScreen: React.FC = () => {
         setEditingEvent(event);
         setEditForm({
             name: event.name || event.tag,
-            amount: event.amount?.toString() || '',
+            amount: formatNumberInput(event.amount?.toString() || ''),
             category: event.category || event.tag,
             detail: event.detail || ''
         });
@@ -112,11 +127,11 @@ const HistoryScreen: React.FC = () => {
 
         const updatedEvent = {
             name: editForm.name,
-            amount: parseInt(editForm.amount) || 0,
+            amount: parseInt(parseFormattedInput(editForm.amount)) || 0,
             category: editForm.category,
             detail: editForm.detail,
             tag: editForm.category,
-            formattedAmount: `${parseInt(editForm.amount) || 0}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'đ'
+            formattedAmount: `${parseInt(parseFormattedInput(editForm.amount)) || 0}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + 'đ'
         };
 
         const success = await updateEventInStore(editingEvent, updatedEvent);
@@ -241,7 +256,7 @@ const HistoryScreen: React.FC = () => {
                                 <TextInput
                                     style={styles.textInput}
                                     value={editForm.amount}
-                                    onChangeText={(text) => setEditForm({...editForm, amount: text})}
+                                    onChangeText={(text) => setEditForm({...editForm, amount: formatNumberInput(text)})}
                                     placeholder="Nhập số tiền"
                                     keyboardType="numeric"
                                 />

@@ -87,6 +87,21 @@ const AddEventScreen: React.FC = () => {
         return '';
     };
 
+    // Format number input for display (add dots)
+    const formatNumberInput = (value: string) => {
+        // Remove all non-digits
+        const numericValue = value.replace(/[^\d]/g, '');
+        if (!numericValue) return '';
+        
+        // Add dots every 3 digits from right
+        return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    };
+
+    // Parse formatted input back to plain number
+    const parseFormattedInput = (value: string) => {
+        return value.replace(/\./g, '');
+    };
+
     const generateSuggestions = (input: string) => {
         const numericInput = input.replace(/[^\d]/g, '');
         if (numericInput && numericInput.length > 0) {
@@ -114,8 +129,8 @@ const AddEventScreen: React.FC = () => {
     };
 
     const handleAmountChange = (text: string) => {
-        const numericText = text.replace(/[^\d]/g, '');
-        setAmountInput(numericText);
+        const formattedText = formatNumberInput(text);
+        setAmountInput(formattedText);
     };
 
     const handleTagPress = (tag: ExpenseTag) => {
@@ -168,7 +183,7 @@ const AddEventScreen: React.FC = () => {
             name: selectedTag.name,
             tag: selectedTag.name,
             category: selectedTag.name,
-            amount: parseInt(amountInput),
+            amount: parseInt(parseFormattedInput(amountInput)),
             formattedAmount: formatCurrency(amountInput),
             detail: eventInput,
             time: (() => {
