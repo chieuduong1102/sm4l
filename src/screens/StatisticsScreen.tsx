@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getWalletHistory } from '../services/WalletHistoryService';
 import { ScrollView as RNScrollView } from 'react-native';
+import AIAnalysis from '../components/AIAnalysis';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ const StatisticsScreen: React.FC = () => {
     const [walletMonthAdded, setWalletMonthAdded] = useState<number[]>([]);
     const [walletMonthSpent, setWalletMonthSpent] = useState<number[]>([]);
     const [pieData, setPieData] = useState<any[]>([]);
+    const [totalSpent, setTotalSpent] = useState<number>(0);
 
     useEffect(() => {
         // Lấy danh sách các tháng có dữ liệu trong store
@@ -48,6 +50,14 @@ const StatisticsScreen: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             const events = await getDataEventsMonthFromStore(selectedMonth);
+            
+            // Tính tổng chi tiêu cho AI Analysis
+            const monthlyTotal = events.reduce((sum, e) => {
+                const amount = parseInt(e.amount || e.formattedAmount || '0', 10);
+                return sum + amount;
+            }, 0);
+            setTotalSpent(monthlyTotal);
+
             // Gom nhóm theo ngày trong tháng cho line chart
             const days: Record<string, number> = {};
             events.forEach(e => {
@@ -225,15 +235,26 @@ const StatisticsScreen: React.FC = () => {
                 <View style={[styles.chartGroupContainer, {paddingBottom: insets.bottom + 40}]}>
                     <View style={styles.chartContainer}>
                         <Text style={styles.chartTitle}>Biểu đồ chi tiêu tháng</Text>
-                        <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <RNScrollView 
+                            horizontal 
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ paddingHorizontal: 16 }}
+                            bounces={false}
+                        >
                             {data.length > 0 ? (
                                 <LineChart
                                     data={{
-                                        labels: labels.map(day => String(Number(day))), // hiển thị ngày dạng số
+                                        labels: labels.map((day, index) => {
+                                            // Hiển thị nhãn thông minh: hiện mỗi 3-5 ngày tùy số lượng
+                                            const step = Math.max(1, Math.floor(labels.length / 8));
+                                            return (index % step === 0 || index === labels.length - 1) 
+                                                ? String(Number(day)) 
+                                                : '';
+                                        }),
                                         datasets: [{ data }],
                                         legend: ['Số tiền đã chi tiêu (cộng dồn)'],
                                     }}
-                                    width={Math.max((labels.length || 1) * 40, width - 32)}
+                                    width={Math.max(labels.length * 60, width - 64)} // Tăng khoảng cách từ 40 -> 60
                                     height={260}
                                     yAxisSuffix=""
                                     yLabelsOffset={8}
@@ -251,9 +272,15 @@ const StatisticsScreen: React.FC = () => {
                                             stroke: '#2563eb',
                                         },
                                         formatYLabel: formatMoney,
+                                        propsForLabels: {
+                                            fontSize: 12,
+                                        },
                                     }}
                                     bezier
-                                    style={{ borderRadius: 4 }}
+                                    style={{ 
+                                        borderRadius: 4,
+                                        marginVertical: 8,
+                                    }}
                                     formatYLabel={formatMoney}
                                 />
                             ) : (
@@ -301,6 +328,11 @@ const StatisticsScreen: React.FC = () => {
                             <Text style={styles.noData}>Không có dữ liệu chi tiêu theo category.</Text>
                         )}
                     </View>
+                    <AIAnalysis
+                        pieData={pieData}
+                        totalSpent={totalSpent}
+                        selectedMonth={selectedMonth}
+                    />
                 </View>
             </ScrollView >
         </View >
