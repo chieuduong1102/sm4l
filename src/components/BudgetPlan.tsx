@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, TextInput, Alert } from 'react-native';
+import { 
+    View, 
+    Text, 
+    StyleSheet, 
+    TouchableOpacity, 
+    ScrollView, 
+    Modal, 
+    TextInput, 
+    Alert, 
+    Keyboard, 
+    TouchableWithoutFeedback, 
+    KeyboardAvoidingView, 
+    Platform,
+    Dimensions
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const WALLET_KEY = 'wallet_balance';
 
 interface BudgetItem {
     id: string;
@@ -16,11 +33,13 @@ interface BudgetPlanProps {
 
 const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
     const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
+    const [walletBalance, setWalletBalance] = useState<number>(0);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [clickCount, setClickCount] = useState<Record<string, number>>({});
 
     const expenseTags = [
         { name: 'Ăn uống', color: '#ef4444' },
@@ -34,6 +53,7 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
 
     useEffect(() => {
         loadBudgetData();
+        loadWalletBalance();
     }, [selectedMonth]);
 
     const loadBudgetData = async () => {
@@ -47,6 +67,21 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
             }
         } catch (error) {
             console.error('Error loading budget data:', error);
+        }
+    };
+
+    const loadWalletBalance = async () => {
+        try {
+            const balance = await AsyncStorage.getItem(WALLET_KEY);
+            if (balance) {
+                const parsedBalance = typeof balance === 'string' ? parseInt(balance, 10) : balance;
+                setWalletBalance(parsedBalance || 0);
+            } else {
+                setWalletBalance(0);
+            }
+        } catch (error) {
+            console.error('Error loading wallet balance:', error);
+            setWalletBalance(0);
         }
     };
 
@@ -68,7 +103,6 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
     };
 
     const handleAmountChange = (text: string) => {
-        // Chỉ cho phép số và dấu chấm
         const numericText = text.replace(/[^0-9]/g, '');
         if (numericText) {
             const formatted = formatMoney(parseInt(numericText, 10));
@@ -80,13 +114,11 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
 
     const openModal = (category?: string, item?: BudgetItem) => {
         if (item) {
-            // Editing mode
             setEditingId(item.id);
             setSelectedCategory(item.category);
             setAmount(formatMoney(item.amount));
             setDescription(item.description);
         } else {
-            // Adding mode
             setEditingId(null);
             setSelectedCategory(category || '');
             setAmount('');
@@ -96,6 +128,11 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
     };
 
     const closeModal = () => {
+        try {
+            Keyboard.dismiss();
+        } catch (error) {
+            console.log('Keyboard dismiss error:', error);
+        }
         setModalVisible(false);
         setSelectedCategory('');
         setAmount('');
@@ -104,6 +141,12 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
     };
 
     const handleSave = async () => {
+        try {
+            Keyboard.dismiss();
+        } catch (error) {
+            console.log('Keyboard dismiss error:', error);
+        }
+
         if (!selectedCategory || !amount) {
             Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
             return;
@@ -122,12 +165,10 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
 
         let updatedItems: BudgetItem[];
         if (editingId) {
-            // Update existing item
             updatedItems = budgetItems.map(item => 
                 item.id === editingId ? newItem : item
             );
         } else {
-            // Add new item
             updatedItems = [...budgetItems, newItem];
         }
 
@@ -155,15 +196,87 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
         );
     };
 
+    const handleDeleteFromModal = async () => {
+        if (!editingId) return;
+        
+        Alert.alert(
+            'Xác nhận xóa',
+            'Bạn có chắc chắn muốn xóa kế hoạch này?',
+            [
+                { text: 'Hủy', style: 'cancel' },
+                {
+                    text: 'Xóa',
+                    style: 'destructive',
+                    onPress: async () => {
+                        const updatedItems = budgetItems.filter(item => item.id !== editingId);
+                        setBudgetItems(updatedItems);
+                        await saveBudgetData(updatedItems);
+                        closeModal();
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleItemPress = (item: BudgetItem) => {
+        const currentCount = clickCount[item.id] || 0;
+        const newCount = currentCount + 1;
+        
+        setClickCount(prev => ({
+            ...prev,
+            [item.id]: newCount
+        }));
+
+        if (newCount >= 5) {
+            setClickCount(prev => ({
+                ...prev,
+                [item.id]: 0
+            }));
+            openModal(undefined, item);
+        }
+
+        setTimeout(() => {
+            setClickCount(prev => ({
+                ...prev,
+                [item.id]: 0
+            }));
+        }, 2000);
+    };
+
     const getTotalBudget = () => {
         return budgetItems.reduce((sum, item) => sum + item.amount, 0);
+    };
+
+    const getRemainingBudget = () => {
+        const totalBudget = getTotalBudget();
+        return walletBalance - totalBudget;
+    };
+
+    const getBudgetStatus = () => {
+        const remaining = getRemainingBudget();
+        if (remaining > 0) {
+            return {
+                text: `Còn lại: ${formatMoney(remaining)}đ`,
+                color: '#16a34a'
+            };
+        } else if (remaining < 0) {
+            return {
+                text: `Vượt quá: ${formatMoney(Math.abs(remaining))}đ`,
+                color: '#ef4444'
+            };
+        } else {
+            return {
+                text: 'Vừa đúng ngân sách',
+                color: '#eab308'
+            };
+        }
     };
 
     const renderBudgetItem = ({ item }: { item: BudgetItem }) => (
         <TouchableOpacity 
             style={styles.budgetItem}
             onLongPress={() => handleDelete(item.id)}
-            onPress={() => openModal(undefined, item)}
+            onPress={() => handleItemPress(item)}
         >
             <View style={styles.budgetItemLeft}>
                 <View style={[styles.categoryColor, { backgroundColor: item.color }]} />
@@ -174,7 +287,14 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
                     ) : null}
                 </View>
             </View>
-            <Text style={styles.budgetItemAmount}>{formatMoney(item.amount)}đ</Text>
+            <View style={styles.budgetItemRight}>
+                <Text style={styles.budgetItemAmount}>{formatMoney(item.amount)}đ</Text>
+                {clickCount[item.id] > 0 && (
+                    <Text style={styles.clickIndicator}>
+                        {clickCount[item.id]}/5
+                    </Text>
+                )}
+            </View>
         </TouchableOpacity>
     );
 
@@ -194,11 +314,26 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView 
+            style={styles.container}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+        >
             <View style={styles.header}>
-                <Text style={styles.title}>Kế hoạch chi tiêu tháng {selectedMonth.slice(5, 7)}/{selectedMonth.slice(0, 4)}</Text>
+                <Text style={styles.title}>
+                    Kế hoạch chi tiêu tháng {selectedMonth.slice(5, 7)}/{selectedMonth.slice(0, 4)}
+                </Text>
+                
+                <Text style={styles.totalWallet}>
+                    Tổng số tiền khả dụng ví: {formatMoney(walletBalance)}đ
+                </Text>
+                
                 <Text style={styles.totalBudget}>
                     Tổng dự trù: {formatMoney(getTotalBudget())}đ
+                </Text>
+                
+                <Text style={[styles.budgetStatus, { color: getBudgetStatus().color }]}>
+                    {/* {getBudgetStatus().text} */}
                 </Text>
             </View>
 
@@ -212,85 +347,111 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
             <View style={styles.budgetListContainer}>
                 <Text style={styles.sectionTitle}>Kế hoạch đã tạo:</Text>
                 {budgetItems.length > 0 ? (
-                    <FlatList
-                        data={budgetItems}
-                        renderItem={renderBudgetItem}
-                        keyExtractor={(item) => item.id}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    <View style={styles.flatListWrapper}>
+                        {budgetItems.map((item) => (
+                            <View key={item.id}>
+                                {renderBudgetItem({ item })}
+                            </View>
+                        ))}
+                    </View>
                 ) : (
                     <Text style={styles.emptyText}>Chưa có kế hoạch chi tiêu nào.</Text>
                 )}
             </View>
 
-            {/* Modal */}
             <Modal
                 visible={modalVisible}
                 transparent
                 animationType="fade"
                 onRequestClose={closeModal}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>
-                            {editingId ? 'Chỉnh sửa kế hoạch' : 'Thêm kế hoạch chi tiêu'}
-                        </Text>
+                <KeyboardAvoidingView 
+                    style={styles.modalOverlay}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <View style={styles.modalOverlay}>
+                            <TouchableWithoutFeedback onPress={() => {}}>
+                                <View style={styles.modalContent}>
+                                    <Text style={styles.modalTitle}>
+                                        {editingId ? 'Chỉnh sửa kế hoạch' : 'Thêm kế hoạch chi tiêu'}
+                                    </Text>
 
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Danh mục:</Text>
-                            <View style={styles.selectedCategoryContainer}>
-                                <View style={[
-                                    styles.categoryColor, 
-                                    { backgroundColor: expenseTags.find(tag => tag.name === selectedCategory)?.color || '#6b7280' }
-                                ]} />
-                                <Text style={styles.selectedCategoryText}>{selectedCategory}</Text>
-                            </View>
-                        </View>
+                                    <View style={styles.formGroup}>
+                                        <Text style={styles.label}>Danh mục:</Text>
+                                        <View style={styles.selectedCategoryContainer}>
+                                            <View style={[
+                                                styles.categoryColor, 
+                                                { backgroundColor: expenseTags.find(tag => tag.name === selectedCategory)?.color || '#6b7280' }
+                                            ]} />
+                                            <Text style={styles.selectedCategoryText}>{selectedCategory}</Text>
+                                        </View>
+                                    </View>
 
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Số tiền (VNĐ):</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={amount}
-                                onChangeText={handleAmountChange}
-                                placeholder="Nhập số tiền"
-                                keyboardType="numeric"
-                            />
-                        </View>
+                                    <View style={styles.formGroup}>
+                                        <Text style={styles.label}>Số tiền (VNĐ):</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={amount}
+                                            onChangeText={handleAmountChange}
+                                            placeholder="Nhập số tiền"
+                                            keyboardType="numeric"
+                                            returnKeyType="next"
+                                            onSubmitEditing={Keyboard.dismiss}
+                                        />
+                                    </View>
 
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Mô tả (tùy chọn):</Text>
-                            <TextInput
-                                style={[styles.input, styles.textArea]}
-                                value={description}
-                                onChangeText={setDescription}
-                                placeholder="Nhập mô tả chi tiết..."
-                                multiline
-                                numberOfLines={3}
-                            />
-                        </View>
+                                    <View style={styles.formGroup}>
+                                        <Text style={styles.label}>Mô tả (tùy chọn):</Text>
+                                        <TextInput
+                                            style={[styles.input, styles.textArea]}
+                                            value={description}
+                                            onChangeText={setDescription}
+                                            placeholder="Nhập mô tả chi tiết..."
+                                            multiline
+                                            numberOfLines={3}
+                                            returnKeyType="done"
+                                            onSubmitEditing={Keyboard.dismiss}
+                                        />
+                                    </View>
 
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
-                                <Text style={styles.cancelButtonText}>Hủy</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                                <Text style={styles.saveButtonText}>
-                                    {editingId ? 'Cập nhật' : 'Thêm'}
-                                </Text>
-                            </TouchableOpacity>
+                                    <View style={styles.modalButtons}>
+                                        <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
+                                            <Text style={styles.cancelButtonText}>Hủy</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                                            <Text style={styles.saveButtonText}>
+                                                {editingId ? 'Cập nhật' : 'Thêm'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {editingId && (
+                                        <TouchableOpacity 
+                                            style={styles.deleteButton} 
+                                            onPress={handleDeleteFromModal}
+                                        >
+                                            <Text style={styles.deleteButtonText}>Xóa kế hoạch này</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            </TouchableWithoutFeedback>
                         </View>
-                    </View>
-                </View>
+                    </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
             </Modal>
-        </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f8fafc',
+    },
+    contentContainer: {
         padding: 16,
+        paddingBottom: 100,
     },
     header: {
         marginBottom: 24,
@@ -302,10 +463,22 @@ const styles = StyleSheet.create({
         color: '#1a365d',
         marginBottom: 8,
     },
+    totalWallet: {
+        fontSize: 16,
+        color: '#16a34a',
+        fontWeight: '600',
+        marginBottom: 4,
+    },
     totalBudget: {
         fontSize: 16,
         color: '#2563eb',
         fontWeight: '600',
+        marginBottom: 4,
+    },
+    budgetStatus: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginTop: 8,
     },
     categoriesContainer: {
         marginBottom: 24,
@@ -348,8 +521,9 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     budgetListContainer: {
-        flex: 1,
+        marginBottom: 24,
     },
+    flatListWrapper: {},
     budgetItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -382,10 +556,23 @@ const styles = StyleSheet.create({
         color: '#6b7280',
         marginTop: 2,
     },
+    budgetItemRight: {
+        alignItems: 'flex-end',
+    },
     budgetItemAmount: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#2563eb',
+    },
+    clickIndicator: {
+        fontSize: 12,
+        color: '#f97316',
+        fontWeight: 'bold',
+        marginTop: 2,
+        backgroundColor: '#fef3c7',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
     },
     emptyText: {
         textAlign: 'center',
@@ -398,6 +585,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+        width: screenWidth,
+        height: screenHeight,
     },
     modalContent: {
         backgroundColor: '#fff',
@@ -452,6 +641,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 20,
+        marginBottom: 16,
     },
     cancelButton: {
         flex: 1,
@@ -476,6 +666,18 @@ const styles = StyleSheet.create({
     },
     saveButtonText: {
         textAlign: 'center',
+        fontSize: 16,
+        color: '#fff',
+        fontWeight: '600',
+    },
+    deleteButton: {
+        width: '100%',
+        padding: 12,
+        borderRadius: 8,
+        backgroundColor: '#ef4444',
+        alignItems: 'center',
+    },
+    deleteButtonText: {
         fontSize: 16,
         color: '#fff',
         fontWeight: '600',

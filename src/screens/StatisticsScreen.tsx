@@ -9,6 +9,7 @@ import { getWalletHistory } from '../services/WalletHistoryService';
 import { ScrollView as RNScrollView } from 'react-native';
 import AIAnalysis from '../components/AIAnalysis';
 import BudgetPlan from '../components/BudgetPlan';
+import BudgetComparison from '../components/BudgetComparison';
 
 const { width } = Dimensions.get('window');
 
@@ -216,6 +217,9 @@ const StatisticsScreen: React.FC = () => {
 
     const renderStatisticsTab = () => (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
+            {/* Thêm BudgetComparison ở đầu */}
+            <BudgetComparison selectedMonth={selectedMonth} />
+            
             <View style={[styles.chartGroupContainer, {paddingBottom: insets.bottom + 40}]}>
                 <View style={styles.chartContainer}>
                     <Text style={styles.chartTitle}>Biểu đồ chi tiêu tháng</Text>
@@ -366,6 +370,7 @@ const StatisticsScreen: React.FC = () => {
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {

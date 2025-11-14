@@ -36,14 +36,13 @@ interface CreditItem {
 
 const WalletScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
-    
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useState<'wallet' | 'lending'>('wallet');
     const [balance, setBalance] = useState<number>(0);
     const [modalVisible, setModalVisible] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [spentThisMonth, setSpentThisMonth] = useState<number>(0);
     const [suggestions, setSuggestions] = useState<string[]>([]);
-    
+
     // Lending/Borrowing/ Credit states
     const [lendingModalVisible, setLendingModalVisible] = useState(false);
     const [borrowingModalVisible, setBorrowingModalVisible] = useState(false);
@@ -61,7 +60,7 @@ const WalletScreen: React.FC = () => {
     const [confirmModal, setConfirmModal] = useState({ visible: false, item: null as any, type: '' });
     const [clearDataModal, setClearDataModal] = useState({ visible: false, type: '' });
     const [clickCounters, setClickCounters] = useState({ lending: 0, borrowing: 0, credit: 0 });
-    
+
     // Edit modal states
     const [editModal, setEditModal] = useState({ visible: false, item: null as any, type: '' });
     const [editAmount, setEditAmount] = useState('');
@@ -96,7 +95,7 @@ const WalletScreen: React.FC = () => {
         // Remove all non-digits
         const numericValue = value.replace(/[^\d]/g, '');
         if (!numericValue) return '';
-        
+
         // Add dots every 3 digits from right
         return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     };
@@ -111,7 +110,7 @@ const WalletScreen: React.FC = () => {
             const lendingDataStr = await AsyncStorage.getItem(LENDING_KEY);
             const borrowingDataStr = await AsyncStorage.getItem(BORROWING_KEY);
             const CreditDataStr = await AsyncStorage.getItem(_CREDIT_KEY);
-            
+
             if (lendingDataStr) {
                 setLendingData(JSON.parse(lendingDataStr));
             }
@@ -188,7 +187,7 @@ const WalletScreen: React.FC = () => {
 
         const updatedData = [...lendingData, newItem];
         await saveLendingData(updatedData);
-        
+
         setLendingModalVisible(false);
         setLendingAmount('');
         setLendingDescription('');
@@ -216,7 +215,7 @@ const WalletScreen: React.FC = () => {
 
         const updatedData = [...borrowingData, newItem];
         await saveBorrowingData(updatedData);
-        
+
         setBorrowingModalVisible(false);
         setBorrowingAmount('');
         setBorrowingDescription('');
@@ -244,7 +243,7 @@ const WalletScreen: React.FC = () => {
 
         const updatedData = [...CreditData, newItem];
         await saveCreditData(updatedData);
-        
+
         setCreditModalVisible(false);
         setCreditAmount('');
         setCreditDescription('');
@@ -254,17 +253,17 @@ const WalletScreen: React.FC = () => {
     const handleCompleteItem = async () => {
         const { item, type } = confirmModal;
         if (type === 'lending') {
-            const updatedData = lendingData.map(l => 
+            const updatedData = lendingData.map(l =>
                 l.id === item.id ? { ...l, isCompleted: true } : l
             );
             await saveLendingData(updatedData);
         } else if (type === 'borrowing') {
-            const updatedData = borrowingData.map(b => 
+            const updatedData = borrowingData.map(b =>
                 b.id === item.id ? { ...b, isCompleted: true } : b
             );
             await saveBorrowingData(updatedData);
         } else if (type === '-credit') {
-            const updatedData = CreditData.map(e => 
+            const updatedData = CreditData.map(e =>
                 e.id === item.id ? { ...e, isCompleted: true } : e
             );
             await saveCreditData(updatedData);
@@ -302,7 +301,7 @@ const WalletScreen: React.FC = () => {
         const currentType = clearDataModal.type;
         // First close the modal
         setClearDataModal({ visible: false, type: '' });
-        
+
         // Then reset the counter for the current type
         setTimeout(() => {
             if (currentType === 'lending') {
@@ -342,17 +341,17 @@ const WalletScreen: React.FC = () => {
 
         try {
             if (type === 'lending') {
-                const updatedData = lendingData.map(l => 
+                const updatedData = lendingData.map(l =>
                     l.id === item.id ? updatedItem : l
                 );
                 await saveLendingData(updatedData);
             } else if (type === 'borrowing') {
-                const updatedData = borrowingData.map(b => 
+                const updatedData = borrowingData.map(b =>
                     b.id === item.id ? updatedItem : b
                 );
                 await saveBorrowingData(updatedData);
             } else if (type === 'evo-credit') {
-                const updatedData = CreditData.map(e => 
+                const updatedData = CreditData.map(e =>
                     e.id === item.id ? updatedItem : e
                 );
                 await saveCreditData(updatedData);
@@ -402,11 +401,6 @@ const WalletScreen: React.FC = () => {
 
     const renderWalletTab = () => (
         <View style={styles.containerWallet}>
-            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16}}>
-                <Text style={styles.currentMonthLabel}>
-                    Tháng {new Date().getMonth() + 1}/{new Date().getFullYear()}
-                </Text>
-            </View>
             <View style={styles.walletBoxNoneBg}>
                 <Text style={styles.label}>Tổng số tiền trong ví</Text>
                 <Text style={styles.balance}>+ {formatNumberDisplay(balance)} đ</Text>
@@ -420,7 +414,7 @@ const WalletScreen: React.FC = () => {
             </View>
             <View style={styles.spentBox}>
                 <Text style={styles.label}>Số dư còn lại</Text>
-                <Text style={styles.balanceSpent}>= {formatNumberDisplay(balance-spentThisMonth)} đ</Text>
+                <Text style={styles.balanceSpent}>= {formatNumberDisplay(balance - spentThisMonth)} đ</Text>
             </View>
         </View>
     );
@@ -508,8 +502,8 @@ const WalletScreen: React.FC = () => {
             <FlatList
                 data={lendingBorrowingTab === 0 ? lendingData : lendingBorrowingTab === 1 ? borrowingData : CreditData}
                 keyExtractor={item => item.id}
-                renderItem={({ item }) => renderLendingBorrowingItem({ 
-                    item, 
+                renderItem={({ item }) => renderLendingBorrowingItem({
+                    item,
                     type: lendingBorrowingTab === 0 ? 'lending' : lendingBorrowingTab === 1 ? 'borrowing' : '-credit'
                 })}
                 style={styles.listContainer}
@@ -521,27 +515,32 @@ const WalletScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <HeaderMain currentTitle="Ví của bạn" />
-            <View style={[styles.tabContainer, { marginTop: insets.top + 80 }]}>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 0 && styles.activeTab]}
-                    onPress={() => setActiveTab(0)}
-                >
-                    <Text style={[styles.tabText, activeTab === 0 && styles.activeTabText]}>
-                        Quản lí ví
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 1 && styles.activeTab]}
-                    onPress={() => setActiveTab(1)}
-                >
-                    <Text style={[styles.tabText, activeTab === 1 && styles.activeTabText]}>
-                        Khoản Vay/Cho vay
-                    </Text>
-                </TouchableOpacity>
+            <View style={[styles.headerContainer, { marginTop: insets.top + 100 }]}>
+                <Text style={styles.label}>Quản lý tài chính Tháng {new Date().getMonth() + 1}/{new Date().getFullYear()}</Text>
+                
+                {/* Tab Navigation với cùng style như StatisticsScreen */}
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'wallet' && styles.activeTab]}
+                        onPress={() => setActiveTab('wallet')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'wallet' && styles.activeTabText]}>
+                            Quản lý ví
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'lending' && styles.activeTab]}
+                        onPress={() => setActiveTab('lending')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'lending' && styles.activeTabText]}>
+                            Khoản Vay/Cho vay
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView style={styles.tabContent}>
-                {activeTab === 0 ? renderWalletTab() : renderLendingBorrowingTab()}
+                {activeTab === 'wallet' ? renderWalletTab() : renderLendingBorrowingTab()}
             </ScrollView>
 
             {/* Existing Add Money Modal */}
@@ -698,8 +697,8 @@ const WalletScreen: React.FC = () => {
                             <TouchableOpacity style={styles.modalButton} onPress={handleCompleteItem}>
                                 <Text style={styles.modalButtonText}>Xác nhận</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.modalButton, { backgroundColor: '#ef4444' }]} 
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: '#ef4444' }]}
                                 onPress={() => setConfirmModal({ visible: false, item: null, type: '' })}
                             >
                                 <Text style={styles.modalButtonText}>Huỷ</Text>
@@ -750,8 +749,8 @@ const WalletScreen: React.FC = () => {
                             }}>
                                 <Text style={styles.modalButtonText}>Xác nhận</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.modalButton, { backgroundColor: '#ef4444' }]} 
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: '#ef4444' }]}
                                 onPress={handleClearDataCancel}
                             >
                                 <Text style={styles.modalButtonText}>Huỷ</Text>
@@ -789,8 +788,8 @@ const WalletScreen: React.FC = () => {
                             <TouchableOpacity style={styles.modalButton} onPress={handleSaveEdit}>
                                 <Text style={styles.modalButtonText}>Lưu</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.modalButton, { backgroundColor: '#ef4444' }]} 
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: '#ef4444' }]}
                                 onPress={() => setEditModal({ visible: false, item: null, type: '' })}
                             >
                                 <Text style={styles.modalButtonText}>Huỷ</Text>
@@ -807,6 +806,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f8fafc',
+    },
+    headerContainer: {
+        paddingHorizontal: 16,
     },
     containerWallet: {
         flex: 1,
@@ -832,9 +834,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     label: {
-        fontSize: 16,
-        color: '#64748b',
-        marginBottom: 8,
+        fontSize: 20,
+        color: '#1a365d',
+        fontWeight: 'bold',
+        marginBottom: 16,
     },
     balance: {
         fontSize: 36,
@@ -954,28 +957,36 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    // Cập nhật tabContainer style giống StatisticsScreen
     tabContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
+        backgroundColor: '#e5e7eb',
+        borderRadius: 8,
+        padding: 4,
+        marginBottom: 16,
     },
     tab: {
+        flex: 1,
         paddingVertical: 12,
         paddingHorizontal: 16,
+        borderRadius: 6,
+        alignItems: 'center',
     },
     activeTab: {
-        borderBottomWidth: 2,
-        borderBottomColor: '#1a365d',
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
     },
     tabText: {
-        fontSize: 16,
-        color: '#64748b',
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#6b7280',
     },
     activeTabText: {
         color: '#1a365d',
-        fontWeight: 'bold',
     },
     tabContent: {
         flex: 1,

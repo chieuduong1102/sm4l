@@ -31,7 +31,11 @@
     cd ..
 
 #npm
-    npx react-native start --reset-cache
+    #Clean node_modules
+    rm -rf node_modules
+    rm -rf package-lock.json
+    npm cache clean --force
+    npm install
 
     npm i
     npm run android
