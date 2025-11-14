@@ -49,6 +49,7 @@ const BudgetPlan: React.FC<BudgetPlanProps> = ({ selectedMonth }) => {
         { name: 'Y tế', color: '#06b6d4' },
         { name: 'Học tập', color: '#3b82f6' },
         { name: 'Nhà cửa', color: '#8b5cf6' },
+        { name: 'Khác', color: '#6b7280' },
     ];
 
     useEffect(() => {
