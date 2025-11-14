@@ -73,6 +73,26 @@ const WalletScreen: React.FC = () => {
         fetchLendingBorrowingData();
     }, []);
 
+    useEffect(() => {
+        // Chỉ gợi ý khi inputValue là số nhỏ (dưới 5 ký tự)
+        if (!inputValue || isNaN(Number(inputValue)) || Number(inputValue) === 0 || inputValue.length > 4) {
+            setSuggestions([]);
+            return;
+        }
+        const num = parseInt(inputValue, 10);
+        if (isNaN(num) || num === 0) {
+            setSuggestions([]);
+            return;
+        }
+        const options = [
+            num * 1000,
+            num * 10000,
+            num * 100000,
+            num * 1000000,
+        ].map(n => n.toLocaleString());
+        setSuggestions(options);
+    }, [inputValue]);
+
     const fetchBalance = async () => {
         const value = await AsyncStorage.getItem(WALLET_KEY);
         setBalance(value ? parseInt(value, 10) : 0);
@@ -84,26 +104,6 @@ const WalletScreen: React.FC = () => {
         const monthEvents = await getDataEventsMonthFromStore(monthStr);
         const spent = monthEvents.reduce((sum, e) => sum + (parseInt(e.amount || e.formattedAmount || '0', 10)), 0);
         setSpentThisMonth(spent);
-    };
-
-    // Format number for display with dots
-    const formatNumberDisplay = (num: number) => {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    };
-
-    // Format number input for display (add dots)
-    const formatNumberInput = (value: string) => {
-        // Remove all non-digits
-        const numericValue = value.replace(/[^\d]/g, '');
-        if (!numericValue) return '';
-        
-        // Add dots every 3 digits from right
-        return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    };
-
-    // Parse formatted input back to plain number
-    const parseFormattedInput = (value: string) => {
-        return value.replace(/\./g, '');
     };
 
     const fetchLendingBorrowingData = async () => {
@@ -154,7 +154,7 @@ const WalletScreen: React.FC = () => {
     };
 
     const handleAddMoney = async () => {
-        const add = parseInt(parseFormattedInput(inputValue), 10);
+        const add = parseInt(inputValue, 10);
         if (isNaN(add) || add <= 0) {
             Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
             return;
@@ -164,11 +164,11 @@ const WalletScreen: React.FC = () => {
         setBalance(newBalance);
         setModalVisible(false);
         setInputValue('');
-        Alert.alert('Thành công', `Đã nạp ${formatNumberDisplay(add)} đ vào ví!`);
+        Alert.alert('Thành công', `Đã nạp ${add.toLocaleString()} vào ví!`);
     };
 
     const handleAddLending = async () => {
-        const amount = parseInt(parseFormattedInput(lendingAmount), 10);
+        const amount = parseInt(lendingAmount, 10);
         if (isNaN(amount) || amount <= 0) {
             Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
             return;
@@ -196,7 +196,7 @@ const WalletScreen: React.FC = () => {
     };
 
     const handleAddBorrowing = async () => {
-        const amount = parseInt(parseFormattedInput(borrowingAmount), 10);
+        const amount = parseInt(borrowingAmount, 10);
         if (isNaN(amount) || amount <= 0) {
             Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
             return;
@@ -224,7 +224,7 @@ const WalletScreen: React.FC = () => {
     };
 
     const handleAddCredit = async () => {
-        const amount = parseInt(parseFormattedInput(CreditAmount), 10);
+        const amount = parseInt(CreditAmount, 10);
         if (isNaN(amount) || amount <= 0) {
             Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
             return;
@@ -317,12 +317,12 @@ const WalletScreen: React.FC = () => {
 
     const handleEditItem = (item: any, type: string) => {
         setEditModal({ visible: true, item, type });
-        setEditAmount(formatNumberInput(item.amount.toString()));
+        setEditAmount(item.amount.toString());
         setEditDescription(item.description);
     };
 
     const handleSaveEdit = async () => {
-        const amount = parseInt(parseFormattedInput(editAmount), 10);
+        const amount = parseInt(editAmount, 10);
         if (isNaN(amount) || amount <= 0) {
             Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
             return;
@@ -376,7 +376,7 @@ const WalletScreen: React.FC = () => {
                         {item.description}
                     </Text>
                     <Text style={[styles.lendingAmount, item.isCompleted && styles.completedText]}>
-                        {type === 'lending' ? '+' : '-'} {formatNumberDisplay(item.amount)} đ
+                        {type === 'lending' ? '+' : '-'} {item.amount.toLocaleString()} đ
                     </Text>
                     <Text style={styles.lendingDate}>{item.date}</Text>
                 </View>
@@ -409,18 +409,18 @@ const WalletScreen: React.FC = () => {
             </View>
             <View style={styles.walletBoxNoneBg}>
                 <Text style={styles.label}>Tổng số tiền trong ví</Text>
-                <Text style={styles.balance}>+ {formatNumberDisplay(balance)} đ</Text>
+                <Text style={styles.balance}>+ {balance.toLocaleString()} đ</Text>
                 <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
                     <Text style={styles.addButtonText}>Nạp tiền vào ví</Text>
                 </TouchableOpacity>
             </View>
             <View style={styles.spentBox}>
                 <Text style={styles.label}>Đã chi trong tháng này</Text>
-                <Text style={styles.spent}>- {formatNumberDisplay(spentThisMonth)} đ</Text>
+                <Text style={styles.spent}>- {spentThisMonth.toLocaleString()} đ</Text>
             </View>
             <View style={styles.spentBox}>
                 <Text style={styles.label}>Số dư còn lại</Text>
-                <Text style={styles.balanceSpent}>= {formatNumberDisplay(balance-spentThisMonth)} đ</Text>
+                <Text style={styles.balanceSpent}>= {(balance-spentThisMonth).toLocaleString()} đ</Text>
             </View>
         </View>
     );
@@ -438,7 +438,7 @@ const WalletScreen: React.FC = () => {
                     });
                 }}>
                     <Text style={styles.label}>Tổng cho vay</Text>
-                    <Text style={[styles.balance, { color: '#1a365d' }]}>+ {formatNumberDisplay(getTotalLending())} đ</Text>
+                    <Text style={[styles.balance, { color: '#1a365d' }]}>+ {getTotalLending().toLocaleString()} đ</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.summaryBox} onPress={() => {
                     setClickCounters(prev => {
@@ -450,7 +450,7 @@ const WalletScreen: React.FC = () => {
                     });
                 }}>
                     <Text style={styles.label}>Tổng đang vay/nợ</Text>
-                    <Text style={[styles.balance, { color: '#ef4444' }]}>- {formatNumberDisplay(getTotalBorrowing())} đ</Text>
+                    <Text style={[styles.balance, { color: '#ef4444' }]}>- {getTotalBorrowing().toLocaleString()} đ</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.summaryBox} onPress={() => {
                     setClickCounters(prev => {
@@ -462,7 +462,7 @@ const WalletScreen: React.FC = () => {
                     });
                 }}>
                     <Text style={styles.label}>Tổng tiêu dùng Credit</Text>
-                    <Text style={[styles.balance, { color: '#ff793f' }]}>- {formatNumberDisplay(getTotalCredit())} đ</Text>
+                    <Text style={[styles.balance, { color: '#ff793f' }]}>- {getTotalCredit().toLocaleString()} đ</Text>
                 </TouchableOpacity>
             </View>
 
@@ -558,9 +558,26 @@ const WalletScreen: React.FC = () => {
                             style={styles.input}
                             keyboardType="numeric"
                             value={inputValue}
-                            onChangeText={(value) => setInputValue(formatNumberInput(value))}
+                            onChangeText={setInputValue}
                             placeholder="Nhập số tiền"
                         />
+                        {suggestions.length > 0 && (
+                            <FlatList
+                                data={suggestions}
+                                keyExtractor={item => item}
+                                renderItem={({ item }) => (
+                                    <TouchableWithoutFeedback onPress={() => {
+                                        setInputValue(item.replace(/\D/g, ''));
+                                        setSuggestions([]);
+                                    }}>
+                                        <View style={styles.suggestionItem}>
+                                            <Text style={styles.suggestionText}>{item} đ</Text>
+                                        </View>
+                                    </TouchableWithoutFeedback>
+                                )}
+                                style={styles.suggestionList}
+                            />
+                        )}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                             <TouchableOpacity style={styles.modalButton} onPress={handleAddMoney}>
                                 <Text style={styles.modalButtonText}>Xác nhận</Text>
@@ -587,7 +604,7 @@ const WalletScreen: React.FC = () => {
                             style={styles.input}
                             keyboardType="numeric"
                             value={lendingAmount}
-                            onChangeText={(value) => setLendingAmount(formatNumberInput(value))}
+                            onChangeText={setLendingAmount}
                             placeholder="Nhập số tiền cho vay"
                         />
                         <TextInput
@@ -623,7 +640,7 @@ const WalletScreen: React.FC = () => {
                             style={styles.input}
                             keyboardType="numeric"
                             value={borrowingAmount}
-                            onChangeText={(value) => setBorrowingAmount(formatNumberInput(value))}
+                            onChangeText={setBorrowingAmount}
                             placeholder="Nhập số tiền vay"
                         />
                         <TextInput
@@ -659,7 +676,7 @@ const WalletScreen: React.FC = () => {
                             style={styles.input}
                             keyboardType="numeric"
                             value={CreditAmount}
-                            onChangeText={(value) => setCreditAmount(formatNumberInput(value))}
+                            onChangeText={setCreditAmount}
                             placeholder="Nhập số tiền tiêu dùng của thẻ tín dụng"
                         />
                         <TextInput
@@ -775,7 +792,7 @@ const WalletScreen: React.FC = () => {
                             style={styles.input}
                             keyboardType="numeric"
                             value={editAmount}
-                            onChangeText={(value) => setEditAmount(formatNumberInput(value))}
+                            onChangeText={setEditAmount}
                             placeholder="Nhập số tiền"
                         />
                         <TextInput
